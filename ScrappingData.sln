@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrawlData", "CrawlData\CrawlData.csproj", "{B5332F53-0520-4D24-B43F-DA69655CAAB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScrappingData", "ScrappingData.csproj", "{3D65BF58-5A77-4B29-9D21-63F7A460CEBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B5332F53-0520-4D24-B43F-DA69655CAAB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B5332F53-0520-4D24-B43F-DA69655CAAB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B5332F53-0520-4D24-B43F-DA69655CAAB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B5332F53-0520-4D24-B43F-DA69655CAAB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D65BF58-5A77-4B29-9D21-63F7A460CEBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D65BF58-5A77-4B29-9D21-63F7A460CEBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D65BF58-5A77-4B29-9D21-63F7A460CEBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D65BF58-5A77-4B29-9D21-63F7A460CEBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

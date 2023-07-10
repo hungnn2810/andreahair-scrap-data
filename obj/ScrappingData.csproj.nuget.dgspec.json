@@ -1,27 +1,29 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Admin\\Desktop\\CrawlData\\CrawlData\\CrawlData.csproj": {}
+    "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Admin\\Desktop\\CrawlData\\CrawlData\\CrawlData.csproj": {
+    "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\CrawlData\\CrawlData\\CrawlData.csproj",
-        "projectName": "CrawlData",
-        "projectPath": "C:\\Users\\Admin\\Desktop\\CrawlData\\CrawlData\\CrawlData.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Desktop\\CrawlData\\CrawlData\\obj\\",
+        "projectUniqueName": "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj",
+        "projectName": "ScrappingData",
+        "projectPath": "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj",
+        "packagesPath": "/Users/hungnn/.nuget/packages/",
+        "outputPath": "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/obj/",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/hungnn/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net5.0-windows"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "/usr/local/share/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -55,8 +57,7 @@
             "net47",
             "net471",
             "net472",
-            "net48",
-            "net481"
+            "net48"
           ],
           "assetTargetFallback": true,
           "warn": true,
@@ -68,7 +69,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.304\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.408/RuntimeIdentifierGraph.json"
         }
       }
     }
