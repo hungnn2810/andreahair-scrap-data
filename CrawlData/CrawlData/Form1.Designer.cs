@@ -29,13 +29,15 @@
         private void InitializeComponent()
         {
             btnCrawl = new System.Windows.Forms.Button();
-            rdoWin = new System.Windows.Forms.RadioButton();
-            rdoMac = new System.Windows.Forms.RadioButton();
+            label1 = new System.Windows.Forms.Label();
+            txtTargetUserNames = new System.Windows.Forms.TextBox();
+            label2 = new System.Windows.Forms.Label();
             SuspendLayout();
             // 
             // btnCrawl
             // 
-            btnCrawl.Location = new System.Drawing.Point(380, 282);
+            btnCrawl.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            btnCrawl.Location = new System.Drawing.Point(409, 454);
             btnCrawl.Name = "btnCrawl";
             btnCrawl.Size = new System.Drawing.Size(296, 89);
             btnCrawl.TabIndex = 0;
@@ -43,35 +45,45 @@
             btnCrawl.UseVisualStyleBackColor = true;
             btnCrawl.Click += btnCrawl_Click;
             // 
-            // rdoWin
+            // label1
             // 
-            rdoWin.AutoSize = true;
-            rdoWin.Checked = true;
-            rdoWin.Location = new System.Drawing.Point(341, 157);
-            rdoWin.Name = "rdoWin";
-            rdoWin.Size = new System.Drawing.Size(87, 36);
-            rdoWin.TabIndex = 1;
-            rdoWin.TabStop = true;
-            rdoWin.Text = "Win";
-            rdoWin.UseVisualStyleBackColor = true;
+            label1.AutoSize = true;
+            label1.Font = new System.Drawing.Font("Segoe UI", 10.875F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label1.Location = new System.Drawing.Point(37, 78);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(178, 40);
+            label1.TabIndex = 1;
+            label1.Text = "Nhập tên IG:";
             // 
-            // rdoMac
+            // txtTargetUserNames
             // 
-            rdoMac.AutoSize = true;
-            rdoMac.Location = new System.Drawing.Point(617, 157);
-            rdoMac.Name = "rdoMac";
-            rdoMac.Size = new System.Drawing.Size(90, 36);
-            rdoMac.TabIndex = 2;
-            rdoMac.Text = "Mac";
-            rdoMac.UseVisualStyleBackColor = true;
+            txtTargetUserNames.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            txtTargetUserNames.Location = new System.Drawing.Point(245, 74);
+            txtTargetUserNames.Multiline = true;
+            txtTargetUserNames.Name = "txtTargetUserNames";
+            txtTargetUserNames.Size = new System.Drawing.Size(749, 240);
+            txtTargetUserNames.TabIndex = 2;
+            // 
+            // label2
+            // 
+            label2.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            label2.AutoSize = true;
+            label2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label2.ForeColor = System.Drawing.Color.DarkRed;
+            label2.Location = new System.Drawing.Point(395, 339);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(311, 32);
+            label2.TabIndex = 3;
+            label2.Text = "(Mỗi tên cách nhau 1 dòng)";
             // 
             // Form1
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(13F, 32F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1100, 647);
-            Controls.Add(rdoMac);
-            Controls.Add(rdoWin);
+            Controls.Add(label2);
+            Controls.Add(txtTargetUserNames);
+            Controls.Add(label1);
             Controls.Add(btnCrawl);
             Name = "Form1";
             Text = "Form1";
@@ -82,7 +94,8 @@
         #endregion
 
         private System.Windows.Forms.Button btnCrawl;
-        private System.Windows.Forms.RadioButton rdoWin;
-        private System.Windows.Forms.RadioButton rdoMac;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox txtTargetUserNames;
+        private System.Windows.Forms.Label label2;
     }
 }
