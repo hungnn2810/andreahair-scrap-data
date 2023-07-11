@@ -1,29 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj": {}
+    "E:\\andreahair_scrapping-data\\ScrappingData.csproj": {}
   },
   "projects": {
-    "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj": {
+    "E:\\andreahair_scrapping-data\\ScrappingData.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj",
+        "projectUniqueName": "E:\\andreahair_scrapping-data\\ScrappingData.csproj",
         "projectName": "ScrappingData",
-        "projectPath": "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/ScrappingData.csproj",
-        "packagesPath": "/Users/hungnn/.nuget/packages/",
-        "outputPath": "/Users/hungnn/Documents/andreahair/andreahair_scrapping-data/obj/",
+        "projectPath": "E:\\andreahair_scrapping-data\\ScrappingData.csproj",
+        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+        "outputPath": "E:\\andreahair_scrapping-data\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "/Users/hungnn/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net5.0-windows"
         ],
         "sources": {
-          "/usr/local/share/dotnet/library-packs": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -49,6 +47,10 @@
             "ExcelMapper": {
               "target": "Package",
               "version": "[5.2.483, )"
+            },
+            "LanguageDetection": {
+              "target": "Package",
+              "version": "[1.2.0, )"
             }
           },
           "imports": [
@@ -57,7 +59,8 @@
             "net47",
             "net471",
             "net472",
-            "net48"
+            "net48",
+            "net481"
           ],
           "assetTargetFallback": true,
           "warn": true,
@@ -69,7 +72,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.408/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.304\\RuntimeIdentifierGraph.json"
         }
       }
     }

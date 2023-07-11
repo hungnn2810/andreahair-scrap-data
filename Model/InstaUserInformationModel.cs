@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using LanguageDetection;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -63,6 +64,14 @@ namespace CrawlData.Model
             return result;
         }
 
+        public static string GetLanguageCode(string val)
+        {
+            var detector = new LanguageDetector();
+            detector.AddAllLanguages();
+
+            return detector.Detect(val);
+        }
+
         public ExcelData GetExcelData()
         {
             return new ExcelData()
@@ -71,7 +80,8 @@ namespace CrawlData.Model
                 username = username,
                 full_name = full_name,
                 phone_number = GetPhoneNumber(biography, external_url, contact_phone_number),
-                link_ig = $"https://www.instagram.com/{username}"
+                link_ig = $"https://www.instagram.com/{username}",
+                language_code = GetLanguageCode(biography)
             };
         }
     }
@@ -83,5 +93,6 @@ namespace CrawlData.Model
         public string full_name { get; set; }
         public string phone_number { get; set; }
         public string link_ig { get; set; }
+        public string language_code { get; set; }
     }
 }
