@@ -28,14 +28,22 @@ namespace CrawlData
             string names = txtTargetUserNames.Text.ToString();
             List<string> targetUserNames = names.Replace(" ", "").Split("\r\n").ToList();
             string sessionId = null;
+            string username = txtUsername.Text.ToString();
+            string password = txtPassword.Text.ToString();
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                MessageBox.Show("Chưa nhập tài khoản hoặc mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             #region Login -> sessionId
             try
             {
                 var requestLoginData = new List<KeyValuePair<string, string>>
                 {
-                    new("username", "duong.test01"),
-                    new("password", "@Hello123"),
+                    new("username", username),
+                    new("password", password),
                     new("verification_code", ""),
                     new("proxy", ""),
                     new("locale", ""),
