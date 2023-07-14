@@ -21,6 +21,7 @@ namespace CrawlData
 
         public void CrawlData()
         {
+            var startTime = DateTime.Now;
             var targetUserIds = new List<string>();
             var targerCountFollower = new List<InstaUserInformationModel>();
             var followersDictionary = new Dictionary<string, InstaFollowerModel>();
@@ -189,8 +190,9 @@ namespace CrawlData
             {
                 File.WriteAllText(@"./log.txt", e.Message);
             }
-
-            MessageBox.Show("Lấy data thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var endTime = DateTime.Now;
+            var totalTime = GetTime(startTime, endTime);
+            MessageBox.Show($"Lấy data thành công! \r\n Tổng thời gian hoàn thành là: {totalTime}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
             #endregion Add data to excel
         }
@@ -264,6 +266,31 @@ namespace CrawlData
             }
 
             return result;
+        }
+        public string GetTime(DateTime lower, DateTime upper)
+        {
+            string returnString = string.Empty;
+            TimeSpan timeSpan = upper - lower;
+            if (timeSpan.Days >= 1)
+            {
+                returnString = timeSpan.Days.ToString() + " ngày";
+            }
+            else
+            {
+                if (timeSpan.Hours == 0 && timeSpan.Minutes == 0)
+                {
+                    returnString = "Less than 1 minute";
+                }
+                else if (timeSpan.Hours > 0)
+                {
+                    returnString = timeSpan.Hours.ToString() + " giờ " + timeSpan.Minutes.ToString() + " phút";
+                }
+                else
+                {
+                    returnString += timeSpan.Minutes.ToString() + " phút" + timeSpan.Seconds.ToString() + "giây";
+                }
+            }
+            return returnString;
         }
     }
 }
