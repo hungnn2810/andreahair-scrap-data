@@ -132,6 +132,7 @@
             Controls.Add(label1);
             Controls.Add(btnCrawl);
             Name = "Main";
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             Text = "Form1";
             ResumeLayout(false);
             PerformLayout();

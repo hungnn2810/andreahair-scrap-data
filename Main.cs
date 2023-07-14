@@ -1,6 +1,9 @@
 ﻿using CrawlData.Commons.Utils;
 using CrawlData.Model;
+using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Ganss.Excel;
+using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,6 +11,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CrawlData
@@ -19,8 +24,9 @@ namespace CrawlData
             InitializeComponent();
         }
 
-        public void CrawlData()
+        public async void CrawlData()
         {
+            #region Properties
             var targetUserIds = new List<string>();
             var targerCountFollower = new List<InstaUserInformationModel>();
             var followersDictionary = new Dictionary<string, InstaFollowerModel>();
@@ -30,10 +36,13 @@ namespace CrawlData
             string sessionId = null;
             string username = txtUsername.Text.ToString();
             string password = txtPassword.Text.ToString();
+            CancellationToken cancellationToken = new CancellationToken();
+            #endregion Properties
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
                 MessageBox.Show("Chưa nhập tài khoản hoặc mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnCrawl.Enabled = true;
                 return;
             }
 
@@ -49,23 +58,23 @@ namespace CrawlData
                     new("locale", ""),
                     new("timezone", "")
                 };
-                sessionId = CreateHttpRequest("auth/login", HttpMethod.Post, requestLoginData);
+                sessionId = await CreateHttpRequest("auth/login", HttpMethod.Post, requestLoginData, cancellationToken);
             }
             catch (Exception e)
             {
                 File.WriteAllText(@"./log.txt", DateTime.Now.ToString() + e.Message);
                 MessageBox.Show("Đăng nhập thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnCrawl.Enabled = true;
                 return;
             }
             #endregion Login -> sessionId
 
             #region Get target user id
-
             foreach (var targetUserName in targetUserNames)
             {
                 try
                 {
-                    var userInfo = GetUserInformation(sessionId, targetUserName);
+                    var userInfo = await GetUserInformation(sessionId, targetUserName, cancellationToken);
                     targetUserIds.Add(userInfo.pk);
                     targerCountFollower.Add(userInfo);
                 }
@@ -79,6 +88,7 @@ namespace CrawlData
             if (targetUserIds.Count <= 0)
             {
                 MessageBox.Show("Không tìm thấy thông tin của tên nhập vào!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnCrawl.Enabled = true;
                 return;
             }
 
@@ -94,7 +104,7 @@ namespace CrawlData
             {
                 try
                 {
-                    var responseGetFollowers = CreateHttpRequest("user/followers", HttpMethod.Post, requestGetFollowerData);
+                    var responseGetFollowers = await CreateHttpRequest("user/followers", HttpMethod.Post, requestGetFollowerData, cancellationToken);
                     followersDictionary.AddRange(responseGetFollowers.ToObject<Dictionary<string, InstaFollowerModel>>());
                 }
                 catch (Exception e)
@@ -105,70 +115,90 @@ namespace CrawlData
             #endregion Get all follower
 
             #region Get info follower 
+            var tasks = new List<Task<Tuple<InstaUserInformationModel, bool>>>();
 
-            foreach (var follower in followersDictionary)
+            foreach (var itemTask in followersDictionary)
             {
+                tasks.Add(GetUserInformationTuple(sessionId, itemTask.Value.username, cancellationToken));
+            }
+
+            foreach (var task in await Task.WhenAll(tasks))
+            {
+                var data = task.Item1;
                 try
                 {
-                    var info = GetUserInformation(sessionId, follower.Value.username);
-                    if (info.is_private)
-                        continue;
-                    var excel = info.GetExcelData();
-                    if (string.IsNullOrEmpty(excel.phone_number))
+                    if (task.Item2)
                     {
-                        try
-                        {
-                            // Lấy ra data của 10 bài viết
-                            var mediaData = GetMediaByUserId(sessionId, excel.id);
-                            List<string> tempPhoneNumber = new List<string>();
-
-                            // Lấy ra sđt có trong 10 bài viết
-                            foreach (var media in mediaData)
-                            {
-                                var phoneNumber = RegexPhoneNumber(mediaData);
-                                if (phoneNumber.Count > 0)
-                                {
-                                    tempPhoneNumber.AddRange(phoneNumber);
-                                }
-                            }
-
-                            string phoneNumb = null;
-                            if (tempPhoneNumber.Count > 0)
-                            {
-                                var phoneVal = tempPhoneNumber.Distinct().ToList();
-                                phoneNumb = string.Join(",", phoneVal);
-                            }
-
-                            if (!string.IsNullOrEmpty(phoneNumb))
-                            {
-                                excel.phone_number = phoneNumb;
-                            }
-
-                            if (string.IsNullOrEmpty(excel.phone_number))
-                            {
-                                continue;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            File.WriteAllText(@"./log.txt", $"userId: {excel.id} -- {excel.username}" + e.Message);
-                        }
+                        if (data.is_private)
+                            continue;
+                        var excel = data.GetExcelData();
+                        excelData.Add(excel);
                     }
-
-                    excelData.Add(excel);
                 }
                 catch (Exception e)
                 {
-                    File.WriteAllText(@"./log.txt", $"userId: {follower.Key} -- {follower.Value.username} " + DateTime.Now.ToString() + e.Message);
+                    File.WriteAllText(@"./log.txt", $"userId: {data.pk} -- {data.username} " + DateTime.Now.ToString() + e.Message);
+                }
+            }
+            #endregion Get info follower 
+
+            #region Get phone number follower by medias
+            var excelPhoneNumb = new List<ExcelData>();
+            var taskGetPhoneNumbers = new List<Task<Tuple<List<InstaMediaModel>, bool>>>();
+
+            // Executed parallel
+            foreach (var excel in excelData)
+            {
+                if (string.IsNullOrEmpty(excel.phone_number))
+                {
+                    taskGetPhoneNumbers.Add(GetMediaByUserId(sessionId, excel.id, cancellationToken));
                 }
             }
 
-            #endregion Get info follower 
+            // When all done doing this
+            foreach (var task in await Task.WhenAll(taskGetPhoneNumbers))
+            {
+                var mediaData = task.Item1;
+                List<string> tempPhoneNumber = new List<string>();
+                var tmpExcel = new ExcelData();
 
+                // Lấy ra sđt có trong 10 bài viết
+                foreach (var media in mediaData)
+                {
+                    var phoneNumber = RegexPhoneNumber(mediaData);
+                    if (phoneNumber.Count > 0)
+                    {
+                        tempPhoneNumber.AddRange(phoneNumber);
+                        tmpExcel.id = media.pk;
+                    }
+                }
+
+                string phoneNumb = null;
+                if (tempPhoneNumber.Count > 0)
+                {
+                    var phoneVal = tempPhoneNumber.Distinct().ToList();
+                    phoneNumb = string.Join(",", phoneVal);
+
+                    tmpExcel.phone_number = phoneNumb;
+                    excelPhoneNumb.Add(tmpExcel);
+                }
+            }
+
+            foreach(var item in excelData)
+            {
+                var phoneNumb = excelPhoneNumb.Where(x => x.id == item.id).Select(x => x.phone_number).FirstOrDefault();
+                if (!string.IsNullOrEmpty(phoneNumb))
+                {
+                    item.phone_number = $"{phoneNumb},{item.phone_number}";
+                }
+            }
+            #endregion Get phone number follower by medias
 
             #region Add data to excel
             try
             {
+                excelData.RemoveAll(x => string.IsNullOrEmpty(x.phone_number));
+
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 Int32 unixTimestamp = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 var excelMapper = new ExcelMapper();
@@ -191,27 +221,29 @@ namespace CrawlData
             }
 
             MessageBox.Show("Lấy data thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            btnCrawl.Enabled = true;
             return;
             #endregion Add data to excel
         }
 
-        private static string CreateHttpRequest(string endpoint, HttpMethod action, IEnumerable<KeyValuePair<string, string>> data)
+        private static async Task<string> CreateHttpRequest(string endpoint, HttpMethod action, IEnumerable<KeyValuePair<string, string>> data, CancellationToken cancellationToken)
         {
             var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromHours(24);
+
             var httpRequest = new HttpRequestMessage(action, $"http://localhost:8000/{endpoint}");
             httpRequest.Headers.Add("accept", "application/json");
 
             var body = new FormUrlEncodedContent(data);
             httpRequest.Content = body;
 
-            var httpResponse = httpClient.Send(httpRequest);
+            var httpResponse = await httpClient.SendAsync(httpRequest, cancellationToken);
             httpResponse.EnsureSuccessStatusCode();
 
-            return httpResponse.Content.ReadAsStringAsync().Result;
+            return await httpResponse.Content.ReadAsStringAsync(cancellationToken);
         }
 
-        private static InstaUserInformationModel GetUserInformation(string sessionId, string userName)
+        private static async Task<InstaUserInformationModel> GetUserInformation(string sessionId, string userName, CancellationToken cancellationToken)
         {
             var getUserInfoBody = new List<KeyValuePair<string, string>>
             {
@@ -219,13 +251,25 @@ namespace CrawlData
                 new("username", userName),
                 new("use_cache", "true")
             };
-            var responseGetUserInfo = CreateHttpRequest("user/info_by_username", HttpMethod.Post, getUserInfoBody);
-
+            var responseGetUserInfo = await CreateHttpRequest("user/info_by_username", HttpMethod.Post, getUserInfoBody, cancellationToken);
 
             return responseGetUserInfo.ToObject<InstaUserInformationModel>();
         }
 
-        private static List<InstaMediaModel> GetMediaByUserId(string sessionId, string userid)
+        private static async Task<Tuple<InstaUserInformationModel, bool>> GetUserInformationTuple(string sessionId, string userName, CancellationToken cancellationToken)
+        {
+            var getUserInfoBody = new List<KeyValuePair<string, string>>
+            {
+                new("sessionid", sessionId),
+                new("username", userName),
+                new("use_cache", "true")
+            };
+            var responseGetUserInfo = await CreateHttpRequest("user/info_by_username", HttpMethod.Post, getUserInfoBody, cancellationToken);
+
+            return Tuple.Create(responseGetUserInfo.ToObject<InstaUserInformationModel>(), true);
+        }
+
+        private static async Task<Tuple<List<InstaMediaModel>, bool>> GetMediaByUserId(string sessionId, string userid, CancellationToken cancellationToken)
         {
             var getMediaBody = new List<KeyValuePair<string, string>>
             {
@@ -233,14 +277,15 @@ namespace CrawlData
                 new("user_id", userid),
                 new("amount", "10")
             };
-            var responseGetUserInfo = CreateHttpRequest("media/user_medias", HttpMethod.Post, getMediaBody);
+            var responseGetUserInfo = await CreateHttpRequest("media/user_medias", HttpMethod.Post, getMediaBody, cancellationToken);
 
-            return responseGetUserInfo.ToObject<List<InstaMediaModel>>();
+            return Tuple.Create(responseGetUserInfo.ToObject<List<InstaMediaModel>>(), true);
         }
-
 
         private void btnCrawl_Click(object sender, EventArgs e)
         {
+            MessageBox.Show("Bắt đầu cào dữ liệu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            btnCrawl.Enabled = false;
             CrawlData();
         }
 
@@ -256,7 +301,7 @@ namespace CrawlData
                 Regex extractPhoneNumberRegex = new Regex("\\+?(\\s*\\d+)*[0-9][0-9]{7,14}");
 
                 tmp = extractPhoneNumberRegex.Matches(regexVal)
-                                .Cast<Match>()
+                                .Cast<System.Text.RegularExpressions.Match>()
                                 .Select(m => m.Value).
                                 ToList();
 
