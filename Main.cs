@@ -201,7 +201,7 @@ namespace CrawlData
         {
             var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromHours(24);
-            var httpRequest = new HttpRequestMessage(action, $"http://localhost:8000/{endpoint}");
+            var httpRequest = new HttpRequestMessage(action, $"http://14.225.207.22:8000/{endpoint}");
             httpRequest.Headers.Add("accept", "application/json");
 
             var body = new FormUrlEncodedContent(data);
