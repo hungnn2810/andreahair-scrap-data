@@ -27,6 +27,7 @@ namespace CrawlData
         public async void CrawlData()
         {
             #region Properties
+            var startTime = DateTime.Now;
             var targetUserIds = new List<string>();
             var targerCountFollower = new List<InstaUserInformationModel>();
             var followersDictionary = new Dictionary<string, InstaFollowerModel>();
@@ -184,7 +185,7 @@ namespace CrawlData
                 }
             }
 
-            foreach(var item in excelData)
+            foreach (var item in excelData)
             {
                 var phoneNumb = excelPhoneNumb.Where(x => x.id == item.id).Select(x => x.phone_number).FirstOrDefault();
                 if (!string.IsNullOrEmpty(phoneNumb))
@@ -219,9 +220,14 @@ namespace CrawlData
             {
                 File.WriteAllText(@"./log.txt", e.Message);
             }
-
-            MessageBox.Show("Lấy data thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var endTime = DateTime.Now;
+            var totalTime = GetTime(startTime, endTime);
+            MessageBox.Show($"Lấy data thành công! \r\n Tổng thời gian {totalTime}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             btnCrawl.Enabled = true;
+            txtPassword.Enabled = true;
+            txtUsername.Enabled = true;
+            txtTargetUserNames.Enabled = true;
+
             return;
             #endregion Add data to excel
         }
@@ -231,7 +237,7 @@ namespace CrawlData
             var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromHours(24);
 
-            var httpRequest = new HttpRequestMessage(action, $"http://localhost:8000/{endpoint}");
+            var httpRequest = new HttpRequestMessage(action, $"http://14.225.207.22:8000/{endpoint}");
             httpRequest.Headers.Add("accept", "application/json");
 
             var body = new FormUrlEncodedContent(data);
@@ -286,6 +292,9 @@ namespace CrawlData
         {
             MessageBox.Show("Bắt đầu cào dữ liệu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             btnCrawl.Enabled = false;
+            txtPassword.Enabled = false;
+            txtUsername.Enabled = false;
+            txtTargetUserNames.Enabled = false;
             CrawlData();
         }
 
@@ -309,6 +318,31 @@ namespace CrawlData
             }
 
             return result;
+        }
+        public string GetTime(DateTime lower, DateTime upper)
+        {
+            string returnString = string.Empty;
+            TimeSpan timeSpan = upper - lower;
+            if (timeSpan.Days >= 1)
+            {
+                returnString = timeSpan.Days.ToString() + " ngày";
+            }
+            else
+            {
+                if (timeSpan.Hours == 0 && timeSpan.Minutes == 0)
+                {
+                    returnString = "Less than 1 minute";
+                }
+                else if (timeSpan.Hours > 0)
+                {
+                    returnString = timeSpan.Hours.ToString() + " giờ " + timeSpan.Minutes.ToString() + " phút";
+                }
+                else
+                {
+                    returnString += timeSpan.Minutes.ToString() + " phút" + timeSpan.Seconds.ToString() + "giây";
+                }
+            }
+            return returnString;
         }
     }
 }
