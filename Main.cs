@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace CrawlData
@@ -171,9 +172,10 @@ namespace CrawlData
             try
             {
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                Int32 unixTimestamp = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                //Int32 unixTimestamp = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 var excelMapper = new ExcelMapper();
-                var fileWinPath = string.Concat(desktopPath, @"/followers_" + unixTimestamp.ToString() + ".xlsx");
+                var timeDone = DateTime.Now.ToString("HH:mm_dd-MM-yyyy");
+                var fileWinPath = string.Concat(desktopPath, @"/followers_" + timeDone + ".xlsx");
                 ExcelHelper file = new ExcelHelper();
                 // Create a new workbook with a single sheet
                 file.NewFile();
@@ -193,6 +195,7 @@ namespace CrawlData
             var endTime = DateTime.Now;
             var totalTime = GetTime(startTime, endTime);
             MessageBox.Show($"Lấy data thành công! \r\n Tổng thời gian hoàn thành là: {totalTime}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            btnCrawl.Enabled = true;
             return;
             #endregion Add data to excel
         }
@@ -243,7 +246,8 @@ namespace CrawlData
 
         private void btnCrawl_Click(object sender, EventArgs e)
         {
-            CrawlData();
+            btnCrawl.Enabled = false;
+            new Thread(() => CrawlData());
         }
 
         public static List<string> RegexPhoneNumber(List<InstaMediaModel> val)

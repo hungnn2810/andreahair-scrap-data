@@ -132,7 +132,7 @@
             Controls.Add(label1);
             Controls.Add(btnCrawl);
             Name = "Main";
-            Text = "Form1";
+            Text = "CrawlData";
             ResumeLayout(false);
             PerformLayout();
         }
