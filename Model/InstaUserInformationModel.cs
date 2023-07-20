@@ -1,4 +1,5 @@
-﻿using LanguageDetection;
+﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using LanguageDetection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -63,36 +64,14 @@ namespace CrawlData.Model
 
             return result;
         }
-
-        public static string GetLanguageCode(string val)
-        {
-            var detector = new LanguageDetector();
-            detector.AddAllLanguages();
-
-            return detector.Detect(val);
-        }
-
-        public ExcelData GetExcelData()
-        {
-            return new ExcelData()
-            {
-                id = pk,
-                username = username,
-                full_name = full_name,
-                phone_number = GetPhoneNumber(biography, external_url, contact_phone_number),
-                link_ig = $"https://www.instagram.com/{username}",
-                language_code = GetLanguageCode(biography)
-            };
-        }
+       
     }
 
     public class ExcelData
     {
-        public string id { get; set; }
         public string username { get; set; }
-        public string full_name { get; set; }
         public string phone_number { get; set; }
         public string link_ig { get; set; }
-        public string language_code { get; set; }
+        public bool isPrivate { get; set; }
     }
 }
