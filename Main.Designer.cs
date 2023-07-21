@@ -160,6 +160,7 @@
             btnExport.TabIndex = 9;
             btnExport.Text = "Xuất file";
             btnExport.UseVisualStyleBackColor = true;
+            btnExport.Click += btnExport_Click;
             // 
             // label5
             // 

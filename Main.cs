@@ -2,7 +2,6 @@
 using CrawlData.Model;
 using Ganss.Excel;
 using Newtonsoft.Json;
-using NPOI.SS.Formula.Functions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using ScrappingData.Model;
@@ -14,8 +13,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using static System.Windows.Forms.LinkLabel;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using Cookie = OpenQA.Selenium.Cookie;
 using Match = System.Text.RegularExpressions.Match;
 using Task = System.Threading.Tasks.Task;
@@ -32,12 +29,11 @@ namespace CrawlData
         }
 
         #region Properties
-        List<ExcelData> exportList = new List<ExcelData>();
-        List<string> targetLinks = new List<string>();
-        List<string> followerLinks = new List<string>();
-        List<ExcelData> excelDatas = new List<ExcelData>();
-        List<LoginModel> listLogin = new List<LoginModel>();
-        TimeSpan timeSpan = new TimeSpan(0, 0, 0);
+        List<string> targetLinks = new();
+        List<string> followerLinks = new();
+        List<ExcelData> excelDatas = new();
+        List<LoginModel> listLogin = new();
+        TimeSpan timeSpan = new(0, 0, 0);
         int totalScan = 0;
         int totalCanScan = 0;
         #endregion Properties
@@ -47,9 +43,10 @@ namespace CrawlData
             var startTime = DateTime.Now;
             try
             {
-                using (SemaphoreSlim concurrencySemaphore = new SemaphoreSlim(listLogin.Count))
+                #region GetFollower
+                using (SemaphoreSlim concurrencySemaphore = new(listLogin.Count))
                 {
-                    List<Task> tasks = new List<Task>();
+                    List<Task> tasks = new();
                     foreach (var link in targetLinks)
                     {
                         concurrencySemaphore.Wait();
@@ -82,6 +79,7 @@ namespace CrawlData
 
                     Task.WaitAll(tasks.ToArray());
                 }
+                #endregion GetFollower
 
                 var listFollower = new List<List<string>>();
                 var total = followerLinks.Count;
@@ -108,7 +106,7 @@ namespace CrawlData
                     }
                 }
 
-                //// Ở mỗi trình duyệt, loop danh sách dữ liệu được cấp phát -> lấy data -> lưu vào 1 biến toàn cục List<Response gì đó>
+                // Ở mỗi trình duyệt, loop danh sách dữ liệu được cấp phát -> lấy data -> lưu vào 1 biến toàn cục List<Response gì đó>
 
                 using (SemaphoreSlim concurrencySemaphore = new SemaphoreSlim(listFollower.Count))
                 {
@@ -657,8 +655,6 @@ namespace CrawlData
         private void btnStop_Click(object sender, EventArgs e)
         {
             btnStart.Enabled = true;
-            _myThread.
-
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -667,6 +663,19 @@ namespace CrawlData
             timeSpan += TimeSpan.FromSeconds(1);
 
             lblTimer.Text = timeSpan.ToString();
+        }
+
+        private void btnExport_Click(object sender, EventArgs e)
+        {
+            if (excelDatas.Count == 0)
+            {
+                MessageBox.Show("Không có dữ liệu để xuất file!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            ExportExcel(excelDatas);
+            MessageBox.Show("Đã xuất file!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
         }
     }
 }
