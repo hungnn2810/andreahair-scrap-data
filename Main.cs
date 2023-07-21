@@ -29,12 +29,16 @@ using CrawlData.Commons.Utils;
 using static NPOI.HSSF.Util.HSSFColor;
 using System.Security.AccessControl;
 using static System.Windows.Forms.Design.AxImporter;
+using DocumentFormat.OpenXml.Office2021.DocumentTasks;
+using Task = System.Threading.Tasks.Task;
+using DocumentFormat.OpenXml.ExtendedProperties;
 
 namespace CrawlData
 {
     public partial class Main : Form
     {
         private Thread _myThread;
+        private Thread _myProcess;
 
         public Main()
         {
@@ -53,18 +57,17 @@ namespace CrawlData
         int totalScan = 0;
         #endregion Properties
 
-        public async Task MainServiceAsync()
+        public async void MainServiceAsync()
         {
             var startTime = DateTime.Now;
             try
             {
                 // Mở trình duyệt
-                string chromeDriverPath = @"C:\chromedriver.exe";
                 // Create ChromeOptions and set any desired options
                 ChromeOptions options = new ChromeOptions();
                 //options.AddArguments("--disable-usb-discovery");
                 // Create the ChromeDriver instance with the options
-                IWebDriver driver = new ChromeDriver(chromeDriverPath, options);
+                IWebDriver driver = new ChromeDriver(options);
                 driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
                 // Check cookie -> nếu có thì load cookie cho trình duyệt (Check cookie còn sống k - vào được trang chính hay chưa)
@@ -85,51 +88,54 @@ namespace CrawlData
                 {
                     GetFollower(driver, link);
                 }
-
+                var isError = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 2);
+                if (isError)
+                {
+                    MessageBox.Show("Lấy thông tin thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 // Pool trình duyệt = 3, chia dữ liệu cho mỗi trình duyệt
-                var quantityDivide1 = totalScan / 3;
-                var quantityDivide2 = quantityDivide1 * 2;
-                var list1 = followerLinks.GetRange(0, quantityDivide1);
-                var list2 = followerLinks.GetRange(quantityDivide1 + 1, quantityDivide2);
-                var list3 = followerLinks.GetRange(quantityDivide2 + 1, totalScan - 1);
+                var index1 = totalScan / 3;
+                var index2 = index1 ;
+                var index3 = index2 + index1 ;
+
+                var list1 = followerLinks.GetRange(0, index1);
+                var list2 = followerLinks.GetRange(index2, index1);
+                var list3 = followerLinks.GetRange(index3, (totalScan - index3));
                 // Ở mỗi trình duyệt, loop danh sách dữ liệu được cấp phát -> lấy data -> lưu vào 1 biến toàn cục List<Response gì đó>
 
                 // Tìm kiếm sđt trong bài viết
                 // Create two tasks.
                 Task task1 = Task.Run(() =>
                 {
-                    NewThread(chromeDriverPath, options, list1);
+                    NewThread(options, list1);
                 });
 
                 Task task2 = Task.Run(() =>
                 {
-                    NewThread(chromeDriverPath, options, list2);
+                    NewThread(options, list2);
                 });
 
                 Task task3 = Task.Run(() =>
                 {
-                    NewThread(chromeDriverPath, options, list3);
+                    CurrentThread(driver, list3);
                 });
-                // Wait for the tasks to complete.
-                Task taskAll = Task.WhenAll(task1, task2);
 
-                // Do something else while the tasks are running.
+                //Wait for the tasks to complete.
 
-                // When the tasks are complete, do this.
-                await taskAll;
+                await Task.WhenAll(task1, task2, task3);
 
                 ExportExcel(excelDatas);
 
-                btnStart.Enabled = true;
+                var endTime = DateTime.Now;
+                var totalTime = GetTime(startTime, endTime);
+                MessageBox.Show($"{totalTime}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                btnStart.BeginInvoke(new Action(() => btnStart.Enabled = true), null);
             }
             catch (Exception ex)
             {
-
+                MessageBox.Show("Lấy thông tin thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            var endTime = DateTime.Now;
-            var totalTime = GetTime(startTime, endTime);
-            MessageBox.Show($"{totalTime}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private bool CheckCookies()
@@ -211,7 +217,6 @@ namespace CrawlData
 
                         var find = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
                         countGet = Convert.ToInt32(find);
-                        totalScan += countGet;
                         lblTotalScan.BeginInvoke(new Action(() => lblTotalScan.Text = countGet.ToString()), null);
                     }
 
@@ -227,6 +232,7 @@ namespace CrawlData
                         catch { }
                     }
 
+                    totalScan += countGet;
                     var endTime = DateTime.Now;
                     var total = GetTime(startTime, endTime);
                     lblTimer.BeginInvoke(new Action(() => lblTimer.Text = total.ToString()), null);
@@ -238,9 +244,41 @@ namespace CrawlData
                 }
             }
         }
-        private void NewThread(string chromeDriverPath, ChromeOptions options, List<string> listDivide)
+
+        private async void CurrentThread(IWebDriver driver, List<string> listDivide)
         {
-            IWebDriver driver = new ChromeDriver(chromeDriverPath, options);
+            List<ExcelData> dataTemp = new List<ExcelData>();
+
+            foreach (var followerLink in listDivide)
+            {
+                var phoneNumb = GetPhoneNumberInBio(driver, followerLink);
+                Thread.Sleep(500);
+                var isPrivate = CheckExistElement(driver, "._aady._aa_s", 1);
+
+                ExcelData excelData = new ExcelData();
+                excelData.username = followerLink.Replace("https://www.instagram.com/", "").Replace("/", "");
+                excelData.phone_number = phoneNumb;
+                excelData.link_ig = followerLink;
+                excelData.isPrivate = isPrivate;
+
+                dataTemp.Add(excelData);
+            }
+
+            dataTemp.RemoveAll(x => x.isPrivate);
+            // Ở mỗi trình duyệt, loop danh sách dữ liệu được cấp phát -> lấy data -> lưu vào 1 biến toàn cục List<Response gì đó>
+
+            // Tìm kiếm sđt trong bài viết
+            foreach (var data in dataTemp.Where(x => string.IsNullOrEmpty(x.phone_number)))
+            {
+                data.phone_number = GetPhoneNumberInPost(driver, data.link_ig);
+            }
+
+            excelDatas.AddRange(dataTemp);
+        }
+
+        private async void NewThread(ChromeOptions options, List<string> listDivide)
+        {
+            IWebDriver driver = new ChromeDriver(options);
             List<ExcelData> dataTemp = new List<ExcelData>();
             driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
@@ -283,11 +321,11 @@ namespace CrawlData
 
             if (!isLoaded)
             {
-                return phoneNumb; 
+                return phoneNumb;
             }
 
             var textContent = ((IJavaScriptExecutor)driver).ExecuteScript($"return document.querySelector('.x7a106z.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.x78zum5.xdt5ytf.x2lah0s.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x1n2onr6.x11njtxf.xwonja6.x1dyjupv.x1onnzdu.xwrz0qm.xgmu61r.x1nbz2ho.xbjc6do').textContent");
-            
+
             phoneNumb = !string.IsNullOrEmpty(textContent.ToString()) ? RegexPhoneNumber(textContent.ToString()) : "";
 
             return phoneNumb;
@@ -417,7 +455,6 @@ namespace CrawlData
 
             // Get the response code.
             Thread.Sleep(2000);
-            driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
             var isError = CheckExistElement(driver, "._ab2z", 2);
 
@@ -480,7 +517,7 @@ namespace CrawlData
         public static string RegexPhoneNumber(string val)
         {
             List<string> regex = new List<string>();
-            
+
             var regexVal = val.Replace(" ", "");
 
             Regex extractPhoneNumberRegex = new Regex("\\+?(\\s*\\d+)*[0-9][0-9]{7,14}");

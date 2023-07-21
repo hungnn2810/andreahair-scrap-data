@@ -77,7 +77,7 @@
             txtTargetLinks.Name = "txtTargetLinks";
             txtTargetLinks.Size = new System.Drawing.Size(824, 431);
             txtTargetLinks.TabIndex = 2;
-            txtTargetLinks.Text = "https://www.instagram.com/andreahair_lily/";
+            txtTargetLinks.Text = "https://www.instagram.com/jk.hair_uka/";
             // 
             // label2
             // 
