@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CrawlData.Model
+namespace Instagram.Model
 {
     public static class DictionaryExtensions
     {

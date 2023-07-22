@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ScrappingData.Model
+namespace Instagram.Model
 {
     public class CookiesModel
     {

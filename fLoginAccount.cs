@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ScrappingData
+namespace Instagram
 {
     public partial class fLoginAccount : Form
     {
@@ -41,7 +41,7 @@ namespace ScrappingData
             File.WriteAllText($@"{folderPath}\loginAccount.txt", acc);
             MessageBox.Show("Lưu thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            this.Close();        
+            this.Close();
         }
 
         private void fLoginAccount_Activated(object sender, EventArgs e)

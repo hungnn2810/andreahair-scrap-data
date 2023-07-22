@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace CrawlData.Model
+namespace Instagram.Model
 {
     public class ExcelData
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScrappingData.Model
+namespace Instagram.Model
 {
     public class LoginModel
     {

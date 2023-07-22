@@ -1,11 +1,10 @@
-﻿using CrawlData.Commons.Utils;
-using CrawlData.Model;
-using Ganss.Excel;
+﻿using Ganss.Excel;
+using Instagram.Commons.Utils;
+using Instagram.Model;
 using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using ScrappingData;
-using ScrappingData.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,7 +17,7 @@ using Cookie = OpenQA.Selenium.Cookie;
 using Match = System.Text.RegularExpressions.Match;
 using Task = System.Threading.Tasks.Task;
 
-namespace CrawlData
+namespace Instagram
 {
     public partial class Main : Form
     {
@@ -38,6 +37,7 @@ namespace CrawlData
         int totalScan = 0;
         int totalHasScan = 0;
         int totalPhoneNubmer = 0;
+        int totalThread = 0;
         #endregion Properties
 
         public async void MainServiceAsync()
@@ -82,6 +82,8 @@ namespace CrawlData
                 }
                 #endregion GetFollower
 
+
+                #region GetPhoneNumber
                 var listFollower = new List<List<string>>();
                 var total = followerLinks.Count;
                 var numberOfAccount = listLogin.Count;
@@ -144,12 +146,12 @@ namespace CrawlData
 
                     Task.WaitAll(tasks.ToArray());
                 }
+                #endregion GetPhoneNumber
 
-                ExportExcel(excelDatas);
+                var fileName = ExportExcel(excelDatas);
 
-                MessageBox.Show("Thời gian hoàn thành: " + lblTimer.Text.ToString(), "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"File đã xuất có tên {fileName}!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 btnStart.BeginInvoke(new Action(() => btnStart.Enabled = true), null);
-                btnExport.BeginInvoke(new Action(() => btnExport.Enabled = true), null);
                 timer1.Stop();
             }
             catch (Exception ex)
@@ -187,9 +189,16 @@ namespace CrawlData
             //Mở trình duyệt
             //Create ChromeOptions and set any desired options
             ChromeOptions options = new ChromeOptions();
-            //options.AddArguments("--disable-usb-discovery");
+            options.AddArgument("--headless");
+
+            //Suppresses ChromeDriver's diagnostics outputs
+            ChromeDriverService service = ChromeDriverService.CreateDefaultService();
+            service.HideCommandPromptWindow = true;
             // Create the ChromeDriver instance with the options
-            IWebDriver driver = new ChromeDriver(options);
+
+            IWebDriver driver = new ChromeDriver(service, options);
+            totalThread += 1;
+            lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
             driver.Manage().Cookies.DeleteAllCookies();
             driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
@@ -235,6 +244,17 @@ namespace CrawlData
                 }
             }
 
+            var isCanntReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 3);
+
+            if (isCanntReload)
+            {
+                totalThread -= 1;
+                lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
+                File.Delete(cookiesPath);
+                MessageBox.Show($"Tài khoản: {userName} tạm thời không thể sử dụng được!", "Thông báo", MessageBoxButtons.OK);
+                return;
+            }
+
             var isHaveFollower = CheckExistElement(driver, "._aano", 5);
 
             if (isHaveFollower)
@@ -253,7 +273,7 @@ namespace CrawlData
 
                     var findStart = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
                     countGet = Convert.ToInt32(findStart);
-                    lblTotalScan.BeginInvoke(new Action(() => lblTotalScan.Text = countGet.ToString()), null);
+                    lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + countGet.ToString()), null);
 
                     while (countStart != countGet)
                     {
@@ -276,7 +296,7 @@ namespace CrawlData
 
                         var find = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
                         countGet = Convert.ToInt32(find);
-                        lblTotalScan.BeginInvoke(new Action(() => lblTotalScan.Text = totalScan.ToString()), null);
+                        lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + countGet.ToString()), null);
                     }
 
                     //var links = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd')");
@@ -297,21 +317,29 @@ namespace CrawlData
                 }
             }
 
+            totalThread -= 1;
+            lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
             driver.Quit();
             driver.Dispose();
         }
 
         private async void GetPhoneNumber(List<string> listFollower, string userName, string password, string cookiesPath)
         {
-            List<ExcelData> dataTemp = new List<ExcelData>();
             //Mở trình duyệt
             //Create ChromeOptions and set any desired options
             ChromeOptions options = new ChromeOptions();
-            //options.AddArguments("--disable-usb-discovery");
+            options.AddArguments("--headless");
+
+            //Suppresses ChromeDriver's diagnostics outputs
+            ChromeDriverService service = ChromeDriverService.CreateDefaultService();
+            service.HideCommandPromptWindow = true;
             // Create the ChromeDriver instance with the options
-            IWebDriver driver = new ChromeDriver(options);
+
+            IWebDriver driver = new ChromeDriver(service, options);
             driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
+            totalThread += 1;
+            lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
             // Check cookie -> nếu có thì load cookie cho trình duyệt (Check cookie còn sống k - vào được trang chính hay chưa)
             var cookiesExisted = CheckCookies(cookiesPath);
 
@@ -330,30 +358,28 @@ namespace CrawlData
             foreach (var followerLink in listFollower)
             {
                 totalHasScan += 1;
-                lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = totalHasScan.ToString()), null);
+                lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = totalHasScan.ToString() + $@"/{totalScan}"), null);
 
                 var phoneNumb = GetPhoneNumberInBio(driver, followerLink);
                 Thread.Sleep(2000);
 
-                if (!string.IsNullOrEmpty(phoneNumb))
-                {
-                    totalPhoneNubmer += 1;
-                    lblSDT.BeginInvoke(new Action(() => lblSDT.Text = totalPhoneNubmer.ToString()), null);
-                }
                 ExcelData excelData = new ExcelData();
                 excelData.username = followerLink.Replace("https://www.instagram.com/", "").Replace("/", "");
                 excelData.phone_number = phoneNumb;
                 excelData.link_ig = followerLink;
 
-                dataTemp.Add(excelData);
+                if (!string.IsNullOrEmpty(excelData.phone_number))
+                {
+                    excelDatas.Add(excelData);
+                }
             }
 
-            dataTemp.RemoveAll(x => string.IsNullOrEmpty(x.phone_number));
             // Ở mỗi trình duyệt, loop danh sách dữ liệu được cấp phát -> lấy data -> lưu vào 1 biến toàn cục List<Response gì đó>
 
-            excelDatas.AddRange(dataTemp);
-
+            totalThread -= 1;
+            lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
             driver.Quit();
+            driver.Dispose();
         }
 
         private string GetPhoneNumberInBio(IWebDriver driver, string linkFollower)
@@ -433,7 +459,7 @@ namespace CrawlData
             }
         }
 
-        private void ExportExcel(List<ExcelData> excelDatas)
+        private string ExportExcel(List<ExcelData> excelDatas)
         {
             try
             {
@@ -453,10 +479,12 @@ namespace CrawlData
                 file.Close();
 
                 excelMapper.Save(fileWinPath, excelDatas);
+
+                return fileWinPath;
             }
             catch
             {
-
+                return "";
             }
         }
 
@@ -532,8 +560,7 @@ namespace CrawlData
         private void btnCrawl_Click(object sender, EventArgs e)
         {
             btnStart.Enabled = false;
-            btnExport.Enabled = false;
-
+            timeSpan = new();
             if (listLogin.Count == 0)
             {
                 MessageBox.Show("Tài khoản nhập vào không hợp lệ!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -648,8 +675,8 @@ namespace CrawlData
                 return;
             }
 
-            ExportExcel(excelDatas);
-            MessageBox.Show("Đã xuất file!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var fileName = ExportExcel(excelDatas);
+            MessageBox.Show($"File đã xuất có tên {fileName}!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -695,6 +722,11 @@ namespace CrawlData
                     dtgvAccount.Rows[myRowIndex].Cells["cPassword"].Value = acc.Password;
                 }
             }
+        }
+
+        private void Main_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

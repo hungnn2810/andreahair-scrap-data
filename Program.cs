@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace CrawlData
+namespace Instagram
 {
     internal static class Program
     {

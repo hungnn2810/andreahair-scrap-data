@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CrawlData.Commons.Utils
+namespace Instagram.Commons.Utils
 {
     public class ExcelHelper
     {

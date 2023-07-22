@@ -2,7 +2,7 @@
 using System;
 using System.Threading;
 
-namespace ScrappingData.Commons.Utils
+namespace Instagram.Commons.Utils
 {
     public class CrawlHelper
     {
