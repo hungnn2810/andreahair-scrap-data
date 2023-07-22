@@ -4,6 +4,7 @@ using Ganss.Excel;
 using Newtonsoft.Json;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using ScrappingData;
 using ScrappingData.Model;
 using System;
 using System.Collections.Generic;
@@ -35,12 +36,12 @@ namespace CrawlData
         List<LoginModel> listLogin = new();
         TimeSpan timeSpan = new(0, 0, 0);
         int totalScan = 0;
-        int totalCanScan = 0;
+        int totalHasScan = 0;
+        int totalPhoneNubmer = 0;
         #endregion Properties
 
         public async void MainServiceAsync()
         {
-            var startTime = DateTime.Now;
             try
             {
                 #region GetFollower
@@ -98,11 +99,11 @@ namespace CrawlData
                     }
                     else if (i == numberOfAccount)
                     {
-                        listFollower.Add(followerLinks.GetRange(index * numberOfAccount, total - (index * numberOfAccount)));
+                        listFollower.Add(followerLinks.GetRange(index * (i - 1), total - (index * (i - 1))));
                     }
                     else
                     {
-                        listFollower.Add(followerLinks.GetRange(index * i, index));
+                        listFollower.Add(followerLinks.GetRange(index * (i - 1), index));
                     }
                 }
 
@@ -146,10 +147,10 @@ namespace CrawlData
 
                 ExportExcel(excelDatas);
 
-                var endTime = DateTime.Now;
-                var totalTime = GetTime(startTime, endTime);
-                MessageBox.Show($"{totalTime}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Thời gian hoàn thành: " + lblTimer.Text.ToString(), "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 btnStart.BeginInvoke(new Action(() => btnStart.Enabled = true), null);
+                btnExport.BeginInvoke(new Action(() => btnExport.Enabled = true), null);
+                timer1.Stop();
             }
             catch (Exception ex)
             {
@@ -189,6 +190,7 @@ namespace CrawlData
             //options.AddArguments("--disable-usb-discovery");
             // Create the ChromeDriver instance with the options
             IWebDriver driver = new ChromeDriver(options);
+            driver.Manage().Cookies.DeleteAllCookies();
             driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
             // Check cookie -> nếu có thì load cookie cho trình duyệt (Check cookie còn sống k - vào được trang chính hay chưa)
@@ -204,6 +206,7 @@ namespace CrawlData
                 LoadCookies(driver, cookiesExisted, userName, password, cookiesPath);
             }
 
+            Thread.Sleep(2000);
             var lastChar = targetLinks[targetLinks.Length - 1].ToString();
             if (lastChar == "/")
             {
@@ -212,6 +215,24 @@ namespace CrawlData
             else
             {
                 driver.Navigate().GoToUrl($"{targetLinks}/followers/");
+            }
+
+            var isNeedReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 2);
+
+            if (isNeedReload)
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript("document.querySelector('.x1i10hfl.xjqpnuy.xa49m3k.xqeqjp1.x2hbi6w.x972fbf.xcfux6l.x1qhh985.xm0m39n.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x2lwn1j.xeuugli.xexx8yu.x18d9i69.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.xjyslct.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x1ejq31n.xd10rxx.x1sy0etr.x17r0tee.x9f619.x9bdzbf.x1ypdohk.x78zum5.x1i0vuye.x1f6kntn.xwhw2v2.xl56j7k.x17ydfre.x1n2onr6.x2b8uid.xlyipyv.x87ps6o.x14atkfc.x1d5wrs8.xn3w4p2.x5ib6vp.xc73u3c.x1tu34mt.xzloghq').click()");
+
+                Thread.Sleep(2000);
+
+                if (lastChar == "/")
+                {
+                    driver.Navigate().GoToUrl($"{targetLinks}followers/");
+                }
+                else
+                {
+                    driver.Navigate().GoToUrl($"{targetLinks}/followers/");
+                }
             }
 
             var isHaveFollower = CheckExistElement(driver, "._aano", 5);
@@ -223,11 +244,9 @@ namespace CrawlData
                     var numberOfFollower = driver.FindElements(By.ClassName("_ac2a"))[1].GetAttribute("title");
                     // Scroll to the element
                     int totalFl = Convert.ToInt32(numberOfFollower.Replace(",", "").Replace(".", ""));
-                    totalCanScan += totalFl;
                     int countGet = 0;
                     int countStart = 0;
                     // Get the dispatcher for the main thread.
-                    lblTotalFollower.BeginInvoke(new Action(() => lblTotalFollower.Text = totalCanScan.ToString()), null);
 
                     //Lấy ra số lượng hiển thị lúc chưa scroll
                     CheckExistElement(driver, ".x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd", 10);
@@ -243,11 +262,11 @@ namespace CrawlData
                         var heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
 
                         //So sánh xem chiều dài trước khi scroll và sau khi scroll
-                        while ((Convert.ToInt32(heightBefore) + 20) > Convert.ToInt32(heightAfter))
+                        while ((Convert.ToInt32(heightAfter) - 30) <= Convert.ToInt32(heightBefore))
                         {
                             Thread.Sleep(2000);
                             heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
-                            if ((Convert.ToInt32(heightBefore) + 20) == (Convert.ToInt32(heightAfter) + 20))
+                            if (Convert.ToInt32(heightAfter) == Convert.ToInt32(heightBefore))
                             {
                                 break;
                             }
@@ -279,6 +298,7 @@ namespace CrawlData
             }
 
             driver.Quit();
+            driver.Dispose();
         }
 
         private async void GetPhoneNumber(List<string> listFollower, string userName, string password, string cookiesPath)
@@ -309,9 +329,17 @@ namespace CrawlData
 
             foreach (var followerLink in listFollower)
             {
+                totalHasScan += 1;
+                lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = totalHasScan.ToString()), null);
+
                 var phoneNumb = GetPhoneNumberInBio(driver, followerLink);
                 Thread.Sleep(2000);
 
+                if (!string.IsNullOrEmpty(phoneNumb))
+                {
+                    totalPhoneNubmer += 1;
+                    lblSDT.BeginInvoke(new Action(() => lblSDT.Text = totalPhoneNubmer.ToString()), null);
+                }
                 ExcelData excelData = new ExcelData();
                 excelData.username = followerLink.Replace("https://www.instagram.com/", "").Replace("/", "");
                 excelData.phone_number = phoneNumb;
@@ -373,6 +401,7 @@ namespace CrawlData
                 List<string> listPhoneInPost = new List<string>();
                 for (int i = 0; i < 10; i++)
                 {
+                    Thread.Sleep(1000);
                     ((IJavaScriptExecutor)driver).ExecuteScript($"document.querySelectorAll('._aagu')[{i}].click()");
 
                     isLoaded = CheckExistElement(driver, "._ae1k._ae2q._ae2r", 2);
@@ -446,7 +475,7 @@ namespace CrawlData
 
             driver.Navigate().Refresh();
 
-            var isLoad = CheckExistElement(driver, ".xvb8j5.x1vjfegm", 10);
+            var isLoad = CheckExistElement(driver, ".x1iyjqo2.xh8yej3", 10);
 
             if (!isLoad)
             {
@@ -483,16 +512,11 @@ namespace CrawlData
             // Get the response code.
             Thread.Sleep(2000);
 
-            var isError = CheckExistElement(driver, "._ab2z", 2);
+            isLoaded = CheckExistElement(driver, ".x1iyjqo2.xh8yej3", 5);
 
-            if (!isError)
+            if (isLoaded)
             {
                 SaveCookies(driver, cookiesPath);
-            }
-            else
-            {
-                MessageBox.Show("Đăng nhập thất bại!\r\nSai tài khoản hoặc mật khẩu! ", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
             }
         }
 
@@ -508,65 +532,20 @@ namespace CrawlData
         private void btnCrawl_Click(object sender, EventArgs e)
         {
             btnStart.Enabled = false;
-            var username1 = txtUsername1.Text;
-            var username2 = txtUsername2.Text;
-            var username3 = txtUsername3.Text;
-            var password1 = txtPassword1.Text;
-            var password2 = txtPassword2.Text;
-            var password3 = txtPassword3.Text;
-            listLogin = new List<LoginModel>();
-            string cookiesPath = @"C:\Andreahair";
+            btnExport.Enabled = false;
+
+            if (listLogin.Count == 0)
+            {
+                MessageBox.Show("Tài khoản nhập vào không hợp lệ!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             // Create a timer and start it.
             timer1.Interval = 1000;
             timer1.Start();
 
-            if (!string.IsNullOrEmpty(username1))
-            {
-                LoginModel login1 = new LoginModel();
-                login1.UserName = username1;
-                login1.Password = password1;
-                login1.CookiesPath = $@"{cookiesPath}\{username1}.json";
-
-                listLogin.Add(login1);
-            }
-            if (!string.IsNullOrEmpty(username2))
-            {
-                LoginModel login2 = new LoginModel();
-                login2.UserName = username2;
-                login2.Password = password2;
-                login2.CookiesPath = $@"{cookiesPath}\{username2}.json";
-
-                listLogin.Add(login2);
-            }
-            if (!string.IsNullOrEmpty(username3))
-            {
-                LoginModel login3 = new LoginModel();
-                login3.UserName = username3;
-                login3.Password = password3;
-                login3.CookiesPath = $@"{cookiesPath}\{username3}.json";
-
-                listLogin.Add(login3);
-            }
 
             targetLinks = txtTargetLinks.Text.Split("\r\n").ToList();
-
-            var namePath = CheckNamePath(username1);
-            if (!cookiesPath.Contains(namePath))
-            {
-                cookiesPath = $@"{cookiesPath}\{namePath}.json";
-            }
-
-            if (string.IsNullOrEmpty(username1) || string.IsNullOrEmpty(password1))
-            {
-                MessageBox.Show("Chưa nhập tài khoản hoặc mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (targetLinks.Count < 0)
-            {
-                MessageBox.Show("Chưa nhập link tài khoản cần lấy dữ liệu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
 
             // Create a new thread object.
             _myThread = new Thread(new ParameterizedThreadStart(MyThreadProc));
@@ -652,10 +631,6 @@ namespace CrawlData
             }
             return isExist;
         }
-        private void btnStop_Click(object sender, EventArgs e)
-        {
-            btnStart.Enabled = true;
-        }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -676,6 +651,50 @@ namespace CrawlData
             ExportExcel(excelDatas);
             MessageBox.Show("Đã xuất file!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
+        }
+
+        private void btnAccount_Click(object sender, EventArgs e)
+        {
+            fLoginAccount account = new fLoginAccount();
+            account.StartPosition = FormStartPosition.CenterScreen;
+            account.ShowDialog();
+        }
+
+        private void Main_Activated(object sender, EventArgs e)
+        {
+            listLogin = new List<LoginModel>();
+            dtgvAccount.Rows.Clear();
+            if (File.Exists($@"C:\Andreahair\loginAccount.txt"))
+            {
+                var data = File.ReadAllText($@"C:\Andreahair\loginAccount.txt");
+
+                var account = data.Replace(" ", "").Split("\r\n");
+                string cookiesPath = @"C:\Andreahair";
+
+                foreach (var acc in account)
+                {
+                    if (!string.IsNullOrEmpty(acc) && acc.Contains("="))
+                    {
+                        LoginModel loginModel = new();
+                        var index = acc.IndexOf("=");
+                        var userName = acc.Substring(0, index);
+                        var password = acc.Replace(userName, "").Replace("=", "");
+
+                        loginModel.UserName = userName;
+                        loginModel.Password = password;
+                        loginModel.CookiesPath = $@"{cookiesPath}\{userName}.json";
+
+                        listLogin.Add(loginModel);
+                    }
+                }
+
+                foreach (var acc in listLogin)
+                {
+                    int myRowIndex = dtgvAccount.Rows.Add();
+                    dtgvAccount.Rows[myRowIndex].Cells["cUserName"].Value = acc.UserName;
+                    dtgvAccount.Rows[myRowIndex].Cells["cPassword"].Value = acc.Password;
+                }
+            }
         }
     }
 }
