@@ -30,13 +30,12 @@ namespace Instagram
 
         #region Properties
         List<string> targetLinks = new();
-        List<string> followerLinks = new();
+        List<FollowerLink> followerLinks = new();
         List<ExcelData> excelDatas = new();
         List<LoginModel> listLogin = new();
         TimeSpan timeSpan = new(0, 0, 0);
         int totalScan = 0;
         int totalHasScan = 0;
-        int totalPhoneNubmer = 0;
         int totalThread = 0;
         #endregion Properties
 
@@ -84,7 +83,7 @@ namespace Instagram
 
 
                 #region GetPhoneNumber
-                var listFollower = new List<List<string>>();
+                var listFollower = new List<List<FollowerLink>>();
                 var total = followerLinks.Count;
                 var numberOfAccount = listLogin.Count;
 
@@ -156,7 +155,6 @@ namespace Instagram
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lấy thông tin thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -282,14 +280,15 @@ namespace Instagram
                         var heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
 
                         //So sánh xem chiều dài trước khi scroll và sau khi scroll
-                        while ((Convert.ToInt32(heightAfter) - 30) <= Convert.ToInt32(heightBefore))
+                        while ((Convert.ToInt32(heightBefore) + 20) > Convert.ToInt32(heightAfter))
                         {
                             Thread.Sleep(2000);
                             heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
-                            if (Convert.ToInt32(heightAfter) == Convert.ToInt32(heightBefore))
+                            if (Convert.ToInt32(heightBefore) == Convert.ToInt32(heightAfter))
                             {
                                 break;
                             }
+                            heightBefore = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
                         }
                         totalScan += (countGet - countStart);
                         countStart = countGet;
@@ -299,14 +298,20 @@ namespace Instagram
                         lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + countGet.ToString()), null);
                     }
 
+
                     //var links = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd')");
+                    var ownername = targetLinks.Replace("https://www.instagram.com/", "").Replace("/", "");
+
                     for (int i = 0; i < countGet; i++)
                     {
                         try
                         {
                             var links = ((IJavaScriptExecutor)driver).ExecuteScript($"return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd')[{i}].attributes.href.value");
                             var href = Convert.ToString("https://www.instagram.com" + links.ToString());
-                            followerLinks.Add(href);
+                            FollowerLink tempLink = new();
+                            tempLink.ownername = ownername;
+                            tempLink.followerLink = href;
+                            followerLinks.Add(tempLink);
                         }
                         catch { }
                     }
@@ -323,7 +328,7 @@ namespace Instagram
             driver.Dispose();
         }
 
-        private async void GetPhoneNumber(List<string> listFollower, string userName, string password, string cookiesPath)
+        private async void GetPhoneNumber(List<FollowerLink> listFollower, string userName, string password, string cookiesPath)
         {
             //Mở trình duyệt
             //Create ChromeOptions and set any desired options
@@ -355,23 +360,21 @@ namespace Instagram
             // Check cookie -> nếu có thì load cookie cho trình duyệt (Check cookie còn sống k - vào được trang chính hay chưa)
             LoadCookies(driver, cookiesExisted, userName, password, cookiesPath);
 
-            foreach (var followerLink in listFollower)
+            foreach (var data in listFollower)
             {
-                totalHasScan += 1;
-                lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = totalHasScan.ToString() + $@"/{totalScan}"), null);
-
-                var phoneNumb = GetPhoneNumberInBio(driver, followerLink);
+                var phoneNumb = GetPhoneNumberInBio(driver, data.followerLink);
                 Thread.Sleep(2000);
 
                 ExcelData excelData = new ExcelData();
-                excelData.username = followerLink.Replace("https://www.instagram.com/", "").Replace("/", "");
+                excelData.ownername = data.ownername.Replace("https://www.instagram.com/", "").Replace("/", "");
+                excelData.username = data.followerLink.Replace("https://www.instagram.com/", "").Replace("/", "");
                 excelData.phone_number = phoneNumb;
-                excelData.link_ig = followerLink;
+                excelData.link_ig = data.followerLink;
 
-                if (!string.IsNullOrEmpty(excelData.phone_number))
-                {
-                    excelDatas.Add(excelData);
-                }
+                excelDatas.Add(excelData);
+
+                totalHasScan += 1;
+                lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = totalHasScan.ToString() + $@"/{totalScan}"), null);
             }
 
             // Ở mỗi trình duyệt, loop danh sách dữ liệu được cấp phát -> lấy data -> lưu vào 1 biến toàn cục List<Response gì đó>
@@ -425,9 +428,8 @@ namespace Instagram
                     return phoneNumb;
                 }
                 List<string> listPhoneInPost = new List<string>();
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 30; i++)
                 {
-                    Thread.Sleep(1000);
                     ((IJavaScriptExecutor)driver).ExecuteScript($"document.querySelectorAll('._aagu')[{i}].click()");
 
                     isLoaded = CheckExistElement(driver, "._ae1k._ae2q._ae2r", 2);
@@ -447,6 +449,13 @@ namespace Instagram
                             }
                         }
                     }
+
+                    if (i >= 10 && listPhoneInPost.Count >= 1)
+                    {
+                        break;
+                    }
+
+                    Thread.Sleep(1000);
                 }
 
                 phoneNumb = string.Join(",", listPhoneInPost.Distinct());
@@ -467,7 +476,7 @@ namespace Instagram
                 //Int32 unixTimestamp = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 var excelMapper = new ExcelMapper();
                 var timeDone = DateTime.Now.ToString("HH.mm_dd-MM-yyyy");
-                var fileWinPath = string.Concat(desktopPath, @"/followers_" + timeDone + ".xlsx");
+                var fileWinPath = string.Concat(desktopPath, @"\followers_" + timeDone + ".xlsx");
                 ExcelHelper file = new ExcelHelper();
                 // Create a new workbook with a single sheet
                 file.NewFile();
@@ -560,13 +569,21 @@ namespace Instagram
         private void btnCrawl_Click(object sender, EventArgs e)
         {
             btnStart.Enabled = false;
-            timeSpan = new();
+
+            RefeshDefault();
+
             if (listLogin.Count == 0)
             {
                 MessageBox.Show("Tài khoản nhập vào không hợp lệ!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnStart.Enabled = true;
                 return;
             }
-
+            if (string.IsNullOrEmpty(txtTargetLinks.Text))
+            {
+                MessageBox.Show("Chưa nhập link instagram!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnStart.Enabled = true;
+                return;
+            }
             // Create a timer and start it.
             timer1.Interval = 1000;
             timer1.Start();
@@ -580,6 +597,21 @@ namespace Instagram
             // In the constructor of the thread object, specify the code that you want to run in the new thread.
             _myThread.Start();
         }
+
+        private void RefeshDefault()
+        {
+            lblHasScan.Text = "0/0";
+            lblTimer.Text = "Đang chờ";
+            lblThread.Text = "Đang chờ";
+            totalScan = 0;
+            totalHasScan = 0;
+            totalThread = 0;
+            targetLinks = new();
+            followerLinks = new();
+            excelDatas = new();
+            timeSpan = new(0, 0, 0);
+        }
+
 
         private void MyThreadProc(object state)
         {
@@ -721,6 +753,14 @@ namespace Instagram
                     dtgvAccount.Rows[myRowIndex].Cells["cUserName"].Value = acc.UserName;
                     dtgvAccount.Rows[myRowIndex].Cells["cPassword"].Value = acc.Password;
                 }
+            }
+        }
+
+        private void Main_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (MessageBox.Show("Bạn đang thoát khỏi ứng dụng!\r\nDữ liệu hiện tại sẽ không được lưu trữ, bạn có muốn tiếp tục không.", "Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+            {
+                e.Cancel = true;
             }
         }
 

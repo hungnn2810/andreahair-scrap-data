@@ -43,10 +43,10 @@
             btnCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             btnCancel.BackColor = System.Drawing.Color.White;
             btnCancel.Font = new System.Drawing.Font("Times New Roman", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            btnCancel.Location = new System.Drawing.Point(285, 320);
-            btnCancel.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
+            btnCancel.Location = new System.Drawing.Point(529, 683);
+            btnCancel.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             btnCancel.Name = "btnCancel";
-            btnCancel.Size = new System.Drawing.Size(159, 42);
+            btnCancel.Size = new System.Drawing.Size(295, 90);
             btnCancel.TabIndex = 43;
             btnCancel.Text = "Hủy";
             btnCancel.UseVisualStyleBackColor = false;
@@ -57,10 +57,10 @@
             btnSave.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             btnSave.BackColor = System.Drawing.Color.White;
             btnSave.Font = new System.Drawing.Font("Times New Roman", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            btnSave.Location = new System.Drawing.Point(59, 320);
-            btnSave.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
+            btnSave.Location = new System.Drawing.Point(110, 683);
+            btnSave.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             btnSave.Name = "btnSave";
-            btnSave.Size = new System.Drawing.Size(159, 42);
+            btnSave.Size = new System.Drawing.Size(295, 90);
             btnSave.TabIndex = 42;
             btnSave.Text = "Lưu";
             btnSave.UseVisualStyleBackColor = false;
@@ -72,10 +72,10 @@
             label8.AutoSize = true;
             label8.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             label8.ForeColor = System.Drawing.Color.DarkRed;
-            label8.Location = new System.Drawing.Point(132, 253);
-            label8.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            label8.Location = new System.Drawing.Point(245, 540);
+            label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label8.Name = "label8";
-            label8.Size = new System.Drawing.Size(215, 19);
+            label8.Size = new System.Drawing.Size(451, 36);
             label8.TabIndex = 41;
             label8.Text = "Ví dụ: \"tên đăng nhập = mật khẩu\"";
             // 
@@ -85,10 +85,10 @@
             label5.AutoSize = true;
             label5.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             label5.ForeColor = System.Drawing.Color.DarkRed;
-            label5.Location = new System.Drawing.Point(97, 228);
-            label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            label5.Location = new System.Drawing.Point(180, 486);
+            label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label5.Name = "label5";
-            label5.Size = new System.Drawing.Size(300, 19);
+            label5.Size = new System.Drawing.Size(619, 36);
             label5.TabIndex = 40;
             label5.Text = "Tên đăng nhập và mật khẩu cách nhau 1 dấu \"=\"";
             // 
@@ -98,39 +98,39 @@
             label4.AutoSize = true;
             label4.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             label4.ForeColor = System.Drawing.Color.DarkRed;
-            label4.Location = new System.Drawing.Point(132, 278);
-            label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            label4.Location = new System.Drawing.Point(245, 593);
+            label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label4.Name = "label4";
-            label4.Size = new System.Drawing.Size(213, 19);
+            label4.Size = new System.Drawing.Size(440, 36);
             label4.TabIndex = 39;
             label4.Text = "(Mỗi tài khoản cách nhau 1 dòng)";
             // 
             // txtAccount
             // 
             txtAccount.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            txtAccount.Location = new System.Drawing.Point(11, 35);
-            txtAccount.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
+            txtAccount.Location = new System.Drawing.Point(20, 75);
+            txtAccount.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             txtAccount.Multiline = true;
             txtAccount.Name = "txtAccount";
-            txtAccount.Size = new System.Drawing.Size(493, 184);
+            txtAccount.Size = new System.Drawing.Size(912, 388);
             txtAccount.TabIndex = 38;
             // 
             // label3
             // 
             label3.AutoSize = true;
             label3.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            label3.Location = new System.Drawing.Point(11, 9);
-            label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            label3.Location = new System.Drawing.Point(20, 19);
+            label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label3.Name = "label3";
-            label3.Size = new System.Drawing.Size(104, 22);
+            label3.Size = new System.Drawing.Size(206, 43);
             label3.TabIndex = 37;
             label3.Text = "Tài khoản :";
             // 
             // fLoginAccount
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleDimensions = new System.Drawing.SizeF(13F, 32F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(515, 394);
+            ClientSize = new System.Drawing.Size(956, 841);
             Controls.Add(btnCancel);
             Controls.Add(btnSave);
             Controls.Add(label8);
@@ -140,7 +140,7 @@
             Controls.Add(label3);
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
-            Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
+            Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "fLoginAccount";
