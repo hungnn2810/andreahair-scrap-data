@@ -277,25 +277,49 @@ namespace Instagram
                     {
                         var heightBefore = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
                         ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollTop = document.querySelector('._aano').scrollHeight");
+                        Thread.Sleep(2000);
                         var heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
 
                         //So sánh xem chiều dài trước khi scroll và sau khi scroll
-                        while ((Convert.ToInt32(heightBefore) + 20) > Convert.ToInt32(heightAfter))
+                        while ((Convert.ToInt32(heightBefore) + 30) > Convert.ToInt32(heightAfter))
                         {
-                            Thread.Sleep(2000);
-                            heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
-                            if (Convert.ToInt32(heightBefore) == Convert.ToInt32(heightAfter))
+                            if(CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 2))
                             {
+                                Thread.Sleep(2000);
+                            }
+                            else
+                            {
+                                heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
                                 break;
                             }
-                            heightBefore = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
+                            ///heightBefore = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
                         }
                         totalScan += (countGet - countStart);
                         countStart = countGet;
 
                         var find = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
                         countGet = Convert.ToInt32(find);
-                        lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + countGet.ToString()), null);
+                        while (countStart == countGet)
+                        {
+                            // Is Loading
+                            if (CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 3))
+                            {
+                                Thread.Sleep(2000);
+                            }
+                            else
+                            {
+                                ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollTop = document.querySelector('._aano').scrollHeight");
+                                Thread.Sleep(5000);
+                                heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
+                                var anotherfind = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
+                                countGet = Convert.ToInt32(anotherfind);
+                                if(countGet == countStart)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + totalScan.ToString()), null);
                     }
 
 
@@ -554,6 +578,10 @@ namespace Instagram
             if (isLoaded)
             {
                 SaveCookies(driver, cookiesPath);
+            }
+            else
+            {
+                MessageBox.Show($"Đăng nhập tài khoản {username} thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
