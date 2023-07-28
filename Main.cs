@@ -49,32 +49,36 @@ namespace Instagram
                     List<Task> tasks = new();
                     foreach (var link in targetLinks)
                     {
-                        concurrencySemaphore.Wait();
-
-                        foreach (var login in listLogin)
+                        try
                         {
-                            if (!login.IsInUse)
+                            concurrencySemaphore.Wait();
+
+                            foreach (var login in listLogin)
                             {
-                                login.IsInUse = true;
-
-                                var t = Task.Factory.StartNew(() =>
+                                if (!login.IsInUse)
                                 {
-                                    try
-                                    {
-                                        GetFollower(link, login.UserName, login.Password, login.CookiesPath);
-                                    }
-                                    finally
-                                    {
-                                        login.IsInUse = false;
-                                        concurrencySemaphore.Release();
-                                    }
-                                });
+                                    login.IsInUse = true;
 
-                                tasks.Add(t);
+                                    var t = Task.Factory.StartNew(() =>
+                                    {
+                                        try
+                                        {
+                                            GetFollower(link, login.UserName, login.Password, login.CookiesPath);
+                                        }
+                                        finally
+                                        {
+                                            login.IsInUse = false;
+                                            concurrencySemaphore.Release();
+                                        }
+                                    });
 
-                                break;
+                                    tasks.Add(t);
+
+                                    break;
+                                }
                             }
                         }
+                        catch { }
                     }
 
                     Task.WaitAll(tasks.ToArray());
@@ -155,6 +159,7 @@ namespace Instagram
             }
             catch (Exception ex)
             {
+                timer1.Stop();
             }
         }
 
@@ -187,7 +192,7 @@ namespace Instagram
             //Mở trình duyệt
             //Create ChromeOptions and set any desired options
             ChromeOptions options = new ChromeOptions();
-            options.AddArgument("--headless");
+            //options.AddArgument("--headless");
 
             //Suppresses ChromeDriver's diagnostics outputs
             ChromeDriverService service = ChromeDriverService.CreateDefaultService();
@@ -224,6 +229,7 @@ namespace Instagram
                 driver.Navigate().GoToUrl($"{targetLinks}/followers/");
             }
 
+            SaveCookies(driver, cookiesPath);
             var isNeedReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 2);
 
             if (isNeedReload)
@@ -250,11 +256,11 @@ namespace Instagram
                 lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
                 File.Delete(cookiesPath);
                 MessageBox.Show($"Tài khoản: {userName} tạm thời không thể sử dụng được!", "Thông báo", MessageBoxButtons.OK);
-                return;
             }
 
             var isHaveFollower = CheckExistElement(driver, "._aano", 5);
 
+            #region Scroll
             if (isHaveFollower)
             {
                 try
@@ -275,26 +281,16 @@ namespace Instagram
 
                     while (countStart != countGet)
                     {
-                        var heightBefore = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
                         ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollTop = document.querySelector('._aano').scrollHeight");
                         Thread.Sleep(2000);
-                        var heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
-
-                        //So sánh xem chiều dài trước khi scroll và sau khi scroll
-                        while ((Convert.ToInt32(heightBefore) + 30) > Convert.ToInt32(heightAfter))
+                        //Check is loading
+                        if (CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 1))
                         {
-                            if(CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 2))
-                            {
-                                Thread.Sleep(2000);
-                            }
-                            else
-                            {
-                                heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
-                                break;
-                            }
-                            ///heightBefore = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
+                            Thread.Sleep(3000);
                         }
+
                         totalScan += (countGet - countStart);
+                        lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + totalScan.ToString()), null);
                         countStart = countGet;
 
                         var find = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
@@ -302,24 +298,24 @@ namespace Instagram
                         while (countStart == countGet)
                         {
                             // Is Loading
-                            if (CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 3))
-                            {
-                                Thread.Sleep(2000);
-                            }
-                            else
+                            if (!CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 1))
                             {
                                 ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollTop = document.querySelector('._aano').scrollHeight");
-                                Thread.Sleep(5000);
-                                heightAfter = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollHeight");
-                                var anotherfind = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
-                                countGet = Convert.ToInt32(anotherfind);
-                                if(countGet == countStart)
+                                if (CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 1))
                                 {
-                                    break;
+                                    Thread.Sleep(2000);
+                                }
+                                else
+                                {
+                                    var anotherfind = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
+                                    countGet = Convert.ToInt32(anotherfind);
+                                    if (countGet == countStart)
+                                    {
+                                        break;
+                                    }
                                 }
                             }
                         }
-                        lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + totalScan.ToString()), null);
                     }
 
 
@@ -342,14 +338,23 @@ namespace Instagram
                 }
                 catch
                 {
-
+                    totalThread -= 1;
+                    lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
+                    driver.Close();
+                    driver.Quit();
+                    driver.Dispose();
                 }
             }
 
             totalThread -= 1;
             lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
+            driver.Close();
             driver.Quit();
             driver.Dispose();
+
+
+            #endregion
+
         }
 
         private async void GetPhoneNumber(List<FollowerLink> listFollower, string userName, string password, string cookiesPath)
@@ -373,6 +378,7 @@ namespace Instagram
             var cookiesExisted = CheckCookies(cookiesPath);
 
             // Login -> Save cookie
+
             if (string.IsNullOrEmpty(cookiesExisted))
             {
                 Login(driver, userName, password, cookiesPath);
@@ -381,8 +387,6 @@ namespace Instagram
             {
                 LoadCookies(driver, cookiesExisted, userName, password, cookiesPath);
             }
-            // Check cookie -> nếu có thì load cookie cho trình duyệt (Check cookie còn sống k - vào được trang chính hay chưa)
-            LoadCookies(driver, cookiesExisted, userName, password, cookiesPath);
 
             foreach (var data in listFollower)
             {
@@ -405,6 +409,7 @@ namespace Instagram
 
             totalThread -= 1;
             lblThread.BeginInvoke(new Action(() => lblThread.Text = totalThread.ToString()), null);
+            driver.Close();
             driver.Quit();
             driver.Dispose();
         }
@@ -523,28 +528,29 @@ namespace Instagram
 
         private void LoadCookies(IWebDriver driver, string cookiesString, string userName, string password, string cookiesPath)
         {
+            MessageBox.Show(cookiesString);
             var cookies = JsonConvert.DeserializeObject<List<CookiesModel>>(cookiesString);
-
+           
             foreach (var item in cookies)
             {
                 var expiry = DateTimeOffset.FromUnixTimeSeconds(item.expiry);
 
                 Cookie cookie = new Cookie(item.name, item.value, item.domain, item.path, expiry.DateTime, item.secure, item.httpOnly, item.sameSite);
-
                 driver.Manage().Cookies.AddCookie(cookie);
             }
 
+            Thread.Sleep(1000);
             driver.Navigate().Refresh();
 
-            var isLoad = CheckExistElement(driver, ".x1iyjqo2.xh8yej3", 10);
-
-            if (!isLoad)
+            var isLoad = CheckExistElement(driver, ".xl5mz7h.xhuyl8g", 10);
+            var notifiExist = CheckExistElement(driver, "._a9-v", 3);
+            if (isLoad || notifiExist)
             {
-                Login(driver, userName, password, cookiesPath);
+                SaveCookies(driver, cookiesPath);
             }
             else
             {
-                SaveCookies(driver, cookiesPath);
+                Login(driver, userName, password, cookiesPath);
             }
         }
 
@@ -554,7 +560,7 @@ namespace Instagram
 
             if (!isLoaded)
             {
-                MessageBox.Show("Đăng nhập thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Đăng nhập tài khoản {username} thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -573,22 +579,24 @@ namespace Instagram
             // Get the response code.
             Thread.Sleep(2000);
 
-            isLoaded = CheckExistElement(driver, ".x1iyjqo2.xh8yej3", 5);
-
-            if (isLoaded)
+            isLoaded = CheckExistElement(driver, ".xl5mz7h.xhuyl8g", 5);
+            var notifiExist = CheckExistElement(driver, "._a9-v", 3);
+            if (isLoaded || notifiExist)
             {
                 SaveCookies(driver, cookiesPath);
             }
             else
             {
                 MessageBox.Show($"Đăng nhập tài khoản {username} thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
         }
 
         private void SaveCookies(IWebDriver driver, string cookiesPath)
         {
+            Thread.Sleep(3000);
             var cookies = driver.Manage().Cookies.AllCookies;
-
+            
             // Save the cookies to a file.
             string cookiesString = JsonConvert.SerializeObject(cookies);
             File.WriteAllText(cookiesPath, cookiesString);
