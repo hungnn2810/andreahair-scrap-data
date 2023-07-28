@@ -8,10 +8,10 @@ namespace Instagram.Commons.Utils
     {
         public bool CheckExistElement(ChromeDriver driver, string querySelector, double timeWait_Second = 0)
         {
-            bool isExist = true;
+            var isExist = true;
             try
             {
-                int timeStart = Environment.TickCount;
+                var timeStart = Environment.TickCount;
                 while ((string)driver.ExecuteScript("return document.querySelectorAll('" + querySelector + "').length+''") == "0")
                 {
                     if (Environment.TickCount - timeStart > timeWait_Second * 1000)

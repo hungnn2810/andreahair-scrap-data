@@ -25,7 +25,7 @@ namespace Instagram
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            string folderPath = @"C:\Andreahair";
+            var folderPath = @"C:\Andreahair";
             var isLoginAccountExisted = File.Exists($@"{folderPath}\loginAccount.txt");
             // Check if the folder already exists
             if (!Directory.Exists(folderPath))
@@ -37,7 +37,7 @@ namespace Instagram
                 File.Create($@"{folderPath}\loginAccount.txt").Close();
             }
 
-            string acc = txtAccount.Text;
+            var acc = txtAccount.Text;
             File.WriteAllText($@"{folderPath}\loginAccount.txt", acc);
             MessageBox.Show("Lưu thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -46,7 +46,7 @@ namespace Instagram
 
         private void fLoginAccount_Activated(object sender, EventArgs e)
         {
-            string folderPath = @"C:\Andreahair";
+            var folderPath = @"C:\Andreahair";
             var isLoginAccountExisted = File.Exists($@"{folderPath}\loginAccount.txt");
             if (isLoginAccountExisted)
             {
