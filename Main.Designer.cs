@@ -48,6 +48,8 @@
             cPassword = new System.Windows.Forms.DataGridViewTextBoxColumn();
             lblThread = new System.Windows.Forms.Label();
             label5 = new System.Windows.Forms.Label();
+            label4 = new System.Windows.Forms.Label();
+            label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)dtgvAccount).BeginInit();
             SuspendLayout();
             // 
@@ -56,7 +58,7 @@
             btnStart.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             btnStart.BackColor = System.Drawing.Color.White;
             btnStart.Font = new System.Drawing.Font("Times New Roman", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            btnStart.Location = new System.Drawing.Point(379, 334);
+            btnStart.Location = new System.Drawing.Point(328, 406);
             btnStart.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             btnStart.Name = "btnStart";
             btnStart.Size = new System.Drawing.Size(182, 48);
@@ -69,33 +71,32 @@
             // 
             label1.AutoSize = true;
             label1.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            label1.Location = new System.Drawing.Point(588, 34);
+            label1.Location = new System.Drawing.Point(526, 30);
             label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label1.Name = "label1";
-            label1.Size = new System.Drawing.Size(140, 22);
+            label1.Size = new System.Drawing.Size(178, 26);
             label1.TabIndex = 1;
             label1.Text = "Link instagram:";
             // 
             // txtTargetLinks
             // 
             txtTargetLinks.Anchor = System.Windows.Forms.AnchorStyles.None;
-            txtTargetLinks.Location = new System.Drawing.Point(588, 75);
+            txtTargetLinks.Location = new System.Drawing.Point(526, 75);
             txtTargetLinks.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             txtTargetLinks.Multiline = true;
             txtTargetLinks.Name = "txtTargetLinks";
-            txtTargetLinks.Size = new System.Drawing.Size(451, 234);
+            txtTargetLinks.Size = new System.Drawing.Size(523, 234);
             txtTargetLinks.TabIndex = 2;
             // 
             // label2
             // 
-            label2.Anchor = System.Windows.Forms.AnchorStyles.None;
             label2.AutoSize = true;
             label2.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             label2.ForeColor = System.Drawing.Color.DarkRed;
-            label2.Location = new System.Drawing.Point(860, 34);
+            label2.Location = new System.Drawing.Point(807, 34);
             label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label2.Name = "label2";
-            label2.Size = new System.Drawing.Size(179, 19);
+            label2.Size = new System.Drawing.Size(232, 22);
             label2.TabIndex = 3;
             label2.Text = "(Mỗi link cách nhau 1 dòng)";
             // 
@@ -106,7 +107,7 @@
             label3.Location = new System.Drawing.Point(40, 30);
             label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label3.Name = "label3";
-            label3.Size = new System.Drawing.Size(104, 22);
+            label3.Size = new System.Drawing.Size(129, 26);
             label3.TabIndex = 4;
             label3.Text = "Tài khoản :";
             // 
@@ -115,7 +116,7 @@
             btnExport.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             btnExport.BackColor = System.Drawing.Color.White;
             btnExport.Font = new System.Drawing.Font("Times New Roman", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            btnExport.Location = new System.Drawing.Point(40, 338);
+            btnExport.Location = new System.Drawing.Point(40, 406);
             btnExport.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             btnExport.Name = "btnExport";
             btnExport.Size = new System.Drawing.Size(182, 48);
@@ -133,10 +134,10 @@
             label6.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             label6.AutoSize = true;
             label6.Font = new System.Drawing.Font("Times New Roman", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            label6.Location = new System.Drawing.Point(631, 365);
+            label6.Location = new System.Drawing.Point(636, 432);
             label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label6.Name = "label6";
-            label6.Size = new System.Drawing.Size(107, 17);
+            label6.Size = new System.Drawing.Size(137, 22);
             label6.TabIndex = 14;
             label6.Text = "Thời gian chạy:";
             // 
@@ -146,10 +147,10 @@
             lblTimer.AutoSize = true;
             lblTimer.Font = new System.Drawing.Font("Times New Roman", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             lblTimer.ForeColor = System.Drawing.Color.Blue;
-            lblTimer.Location = new System.Drawing.Point(758, 365);
+            lblTimer.Location = new System.Drawing.Point(823, 432);
             lblTimer.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             lblTimer.Name = "lblTimer";
-            lblTimer.Size = new System.Drawing.Size(69, 17);
+            lblTimer.Size = new System.Drawing.Size(89, 22);
             lblTimer.TabIndex = 15;
             lblTimer.Text = "Đang chờ";
             // 
@@ -159,10 +160,10 @@
             lblHasScan.AutoSize = true;
             lblHasScan.Font = new System.Drawing.Font("Times New Roman", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             lblHasScan.ForeColor = System.Drawing.Color.Olive;
-            lblHasScan.Location = new System.Drawing.Point(758, 338);
+            lblHasScan.Location = new System.Drawing.Point(823, 405);
             lblHasScan.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             lblHasScan.Name = "lblHasScan";
-            lblHasScan.Size = new System.Drawing.Size(28, 17);
+            lblHasScan.Size = new System.Drawing.Size(35, 22);
             lblHasScan.TabIndex = 31;
             lblHasScan.Text = "0/0";
             // 
@@ -171,10 +172,10 @@
             label10.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             label10.AutoSize = true;
             label10.Font = new System.Drawing.Font("Times New Roman", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            label10.Location = new System.Drawing.Point(631, 338);
+            label10.Location = new System.Drawing.Point(636, 405);
             label10.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label10.Name = "label10";
-            label10.Size = new System.Drawing.Size(64, 17);
+            label10.Size = new System.Drawing.Size(79, 22);
             label10.TabIndex = 30;
             label10.Text = "Đã quét:";
             // 
@@ -183,7 +184,7 @@
             btnAccount.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             btnAccount.BackColor = System.Drawing.Color.White;
             btnAccount.Font = new System.Drawing.Font("Times New Roman", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            btnAccount.Location = new System.Drawing.Point(441, 24);
+            btnAccount.Location = new System.Drawing.Point(390, 23);
             btnAccount.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             btnAccount.Name = "btnAccount";
             btnAccount.Size = new System.Drawing.Size(120, 37);
@@ -207,7 +208,7 @@
             dtgvAccount.RowHeadersVisible = false;
             dtgvAccount.RowHeadersWidth = 82;
             dtgvAccount.RowTemplate.Height = 41;
-            dtgvAccount.Size = new System.Drawing.Size(521, 234);
+            dtgvAccount.Size = new System.Drawing.Size(470, 311);
             dtgvAccount.TabIndex = 33;
             // 
             // cUserName
@@ -232,10 +233,10 @@
             lblThread.AutoSize = true;
             lblThread.Font = new System.Drawing.Font("Times New Roman", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             lblThread.ForeColor = System.Drawing.Color.DarkViolet;
-            lblThread.Location = new System.Drawing.Point(758, 393);
+            lblThread.Location = new System.Drawing.Point(823, 460);
             lblThread.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             lblThread.Name = "lblThread";
-            lblThread.Size = new System.Drawing.Size(69, 17);
+            lblThread.Size = new System.Drawing.Size(89, 22);
             lblThread.TabIndex = 35;
             lblThread.Text = "Đang chờ";
             // 
@@ -244,18 +245,44 @@
             label5.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             label5.AutoSize = true;
             label5.Font = new System.Drawing.Font("Times New Roman", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            label5.Location = new System.Drawing.Point(631, 393);
+            label5.Location = new System.Drawing.Point(636, 460);
             label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label5.Name = "label5";
-            label5.Size = new System.Drawing.Size(123, 17);
+            label5.Size = new System.Drawing.Size(155, 22);
             label5.TabIndex = 34;
             label5.Text = "Luồng đang chạy:";
             // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label4.ForeColor = System.Drawing.Color.DarkRed;
+            label4.Location = new System.Drawing.Point(514, 364);
+            label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(567, 22);
+            label4.TabIndex = 36;
+            label4.Text = "Ví dụ: \"https://www.instagram.com/andreahair_lily/  = 59461529629\"";
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label7.ForeColor = System.Drawing.Color.DarkRed;
+            label7.Location = new System.Drawing.Point(638, 329);
+            label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            label7.Name = "label7";
+            label7.Size = new System.Drawing.Size(274, 22);
+            label7.TabIndex = 37;
+            label7.Text = "Link và UserId cách nhau dấu \"=\"";
+            // 
             // Main
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
+            AutoScaleDimensions = new System.Drawing.SizeF(10F, 21F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(1066, 430);
+            ClientSize = new System.Drawing.Size(1086, 508);
+            Controls.Add(label7);
+            Controls.Add(label4);
             Controls.Add(lblThread);
             Controls.Add(lblHasScan);
             Controls.Add(lblTimer);
@@ -307,5 +334,7 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.DataGridViewTextBoxColumn cUserName;
         private System.Windows.Forms.DataGridViewTextBoxColumn cPassword;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label7;
     }
 }

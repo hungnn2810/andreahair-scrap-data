@@ -6,12 +6,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Windows.Media.Capture;
 using Ganss.Excel;
 using Instagram.Commons.Utils;
 using Instagram.Model;
 using Newtonsoft.Json;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using DocumentFormat.OpenXml.Bibliography;
+using Org.BouncyCastle.Asn1.X509;
+using OpenQA.Selenium.Support.UI;
 
 namespace Instagram
 {
@@ -26,7 +30,7 @@ namespace Instagram
 
         #region Properties
 
-        private List<string> _targetLinks = new();
+        private List<TargetLinkModel> _targetLinks = new();
         private List<FollowerLink> _followerLinks = new();
         private List<ExcelData> _excelData = new();
         private List<LoginModel> _listLogin = new();
@@ -105,11 +109,11 @@ namespace Instagram
                             listFollower.Add(_followerLinks.GetRange(index, total - index));
                             break;
                         default:
-                        {
-                            listFollower.Add(i == numberOfAccount ? _followerLinks.GetRange(index * (i - 1), total - index * (i - 1)) : _followerLinks.GetRange(index * (i - 1), index));
+                            {
+                                listFollower.Add(i == numberOfAccount ? _followerLinks.GetRange(index * (i - 1), total - index * (i - 1)) : _followerLinks.GetRange(index * (i - 1), index));
 
-                            break;
-                        }
+                                break;
+                            }
                     }
                 }
 
@@ -159,6 +163,8 @@ namespace Instagram
             catch (Exception ex)
             {
                 timer1.Stop();
+                MessageBox.Show(ex.Message);
+                btnStart.BeginInvoke(new Action(() => btnStart.Enabled = true), null);
             }
         }
 
@@ -183,20 +189,20 @@ namespace Instagram
             return cookies;
         }
 
-        private void GetFollower(string targetLinks, string userName, string password, string cookiesPath)
+        private void GetFollower(TargetLinkModel targetLinks, string userName, string password, string cookiesPath)
         {
             //Mở trình duyệt
-            var options = new ChromeOptions(
-            );
-            //options.AddArgument("--headless");
+            var options = new ChromeOptions();
+            options.AddArgument("--headless");
 
             var service = ChromeDriverService.CreateDefaultService();
             service.HideCommandPromptWindow = true;
 
-            IWebDriver driver = new ChromeDriver(service, options);
+            IWebDriver driver = new ChromeDriver(service, options, TimeSpan.FromMinutes(5));
             _totalThread += 1;
             lblThread.BeginInvoke(new Action(() => lblThread.Text = _totalThread.ToString()), null);
             driver.Manage().Cookies.DeleteAllCookies();
+            driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromMinutes(5);
             driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
             // Check cookie -> nếu có thì load cookie cho trình duyệt (Check cookie còn sống k - vào được trang chính hay chưa)
@@ -213,8 +219,7 @@ namespace Instagram
             }
 
             Thread.Sleep(2000);
-            var lastChar = targetLinks[^1].ToString();
-            driver.Navigate().GoToUrl(lastChar == "/" ? $"{targetLinks}followers/" : $"{targetLinks}/followers/");
+            driver.Navigate().GoToUrl(targetLinks.TargetLinks);
 
             SaveCookies(driver, cookiesPath);
             var isNeedReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 2);
@@ -225,7 +230,7 @@ namespace Instagram
 
                 Thread.Sleep(2000);
 
-                driver.Navigate().GoToUrl(lastChar == "/" ? $"{targetLinks}followers/" : $"{targetLinks}/followers/");
+                driver.Navigate().GoToUrl(targetLinks.TargetLinks);
             }
 
             var isCannotReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 3);
@@ -235,102 +240,53 @@ namespace Instagram
                 _totalThread -= 1;
                 lblThread.BeginInvoke(new Action(() => lblThread.Text = _totalThread.ToString()), null);
                 File.Delete(cookiesPath);
+                driver.Quit();
+                driver.Dispose();
                 MessageBox.Show($@"Tài khoản: {userName} tạm thời không thể sử dụng được!", "Thông báo", MessageBoxButtons.OK);
             }
 
-            var isHaveFollower = CheckExistElement(driver, "._aano", 5);
+            var numbOfFollowing = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll(\"._ac2a\")[2].innerText");
+            var totalFollowing = Convert.ToInt32(numbOfFollowing.ToString().Replace(",", ""));
+            int timeWait = 60000;
+            if (totalFollowing >= 5000 && totalFollowing <= 10000)
+            {
+                timeWait = 90000;
+            }
+            else if (totalFollowing > 10000)
+            {
+                timeWait = 3000000;
+            }
 
-            #region Scroll
+            var excuteSrcipt = GetAllUserByScript(targetLinks.UserId, timeWait.ToString());
 
-            if (isHaveFollower)
+            var tmp = ((IJavaScriptExecutor)driver).ExecuteAsyncScript($"{excuteSrcipt}");
+            var following = tmp.ToJson().ToString().Replace("[", "").Replace("]", "").Replace(@"""", "");
+
+            var listFollowing = following.Split(",");
+
+            var ownerName = GetNameInLink(targetLinks.TargetLinks);
+
+            foreach (var followName in listFollowing)
             {
                 try
                 {
-                    var numberOfFollower = driver.FindElements(By.ClassName("_ac2a"))[1].GetAttribute("title");
-                    // Scroll to the element
-                    var totalFl = Convert.ToInt32(numberOfFollower.Replace(",", "").Replace(".", ""));
-                    var countGet = 0;
-                    var countStart = 0;
-                    // Get the dispatcher for the main thread.
-
-                    //Lấy ra số lượng hiển thị lúc chưa scroll
-                    CheckExistElement(driver, ".x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd", 10);
-
-                    var findStart = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
-                    countGet = Convert.ToInt32(findStart);
-                    var get = countGet;
-                    lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + get), null);
-
-                    while (countStart != countGet)
+                    var href = Convert.ToString("https://www.instagram.com/" + followName);
+                    FollowerLink tempLink = new()
                     {
-                        ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollTop = document.querySelector('._aano').scrollHeight");
-                        Thread.Sleep(2000);
-                        //Check is loading
-                        if (CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 1))
-                        {
-                            Thread.Sleep(3000);
-                        }
-
-                        _totalScan += (countGet - countStart);
-                        lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + _totalScan.ToString()), null);
-                        countStart = countGet;
-
-                        var find = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
-                        countGet = Convert.ToInt32(find);
-                        while (countStart == countGet)
-                        {
-                            // Is Loading
-                            if (CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 1)) continue;
-
-                            ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelector('._aano').scrollTop = document.querySelector('._aano').scrollHeight");
-                            if (CheckExistElement(driver, ".x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.xw7yly9.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x6s0dn4.x1oa3qoh.x1nhvcw1", 1))
-                            {
-                                Thread.Sleep(2000);
-                            }
-                            else
-                            {
-                                var anotherfind = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd').length");
-                                countGet = Convert.ToInt32(anotherfind);
-                                if (countGet == countStart)
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-
-                    //var links = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd')");
-                    var ownerName = targetLinks.Replace("https://www.instagram.com/", "").Replace("/", "");
-
-                    for (var i = 0; i < countGet; i++)
-                    {
-                        try
-                        {
-                            var links = ((IJavaScriptExecutor)driver).ExecuteScript($"return document.querySelectorAll('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.notranslate._a6hd')[{i}].attributes.href.value");
-                            var href = Convert.ToString("https://www.instagram.com" + links);
-                            FollowerLink tempLink = new()
-                            {
-                                ownername = ownerName,
-                                followerLink = href
-                            };
-                            _followerLinks.Add(tempLink);
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
+                        ownername = ownerName,
+                        followerLink = href
+                    };
+                    _followerLinks.Add(tempLink);
+                    _totalScan += 1;
+                    lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = "0/" + _totalScan.ToString()), null);
                 }
                 catch
                 {
-                    _totalThread -= 1;
-                    lblThread.BeginInvoke(new Action(() => lblThread.Text = _totalThread.ToString()), null);
-                    driver.Close();
-                    driver.Quit();
-                    driver.Dispose();
+                    // ignored
                 }
             }
+
+            #region Scroll
 
             _totalThread -= 1;
             lblThread.BeginInvoke(new Action(() => lblThread.Text = _totalThread.ToString()), null);
@@ -344,7 +300,7 @@ namespace Instagram
         private void GetPhoneNumber(List<FollowerLink> listFollower, string userName, string password, string cookiesPath)
         {
             var options = new ChromeOptions();
-          //  options.AddArguments("--headless");
+            options.AddArguments("--headless");
 
             var service = ChromeDriverService.CreateDefaultService();
             service.HideCommandPromptWindow = true;
@@ -354,7 +310,7 @@ namespace Instagram
 
             _totalThread += 1;
             lblThread.BeginInvoke(new Action(() => lblThread.Text = _totalThread.ToString()), null);
-            
+
             // Check cookie -> nếu có thì load cookie cho trình duyệt (Check cookie còn sống k - vào được trang chính hay chưa)
             var cookiesExisted = CheckCookies(cookiesPath);
 
@@ -371,7 +327,7 @@ namespace Instagram
             foreach (var data in listFollower)
             {
                 var phoneNumb = GetPhoneNumberInBio(driver, data.followerLink);
-                Thread.Sleep(2000);
+                Thread.Sleep(1000);
 
                 var excelData = new ExcelData
                 {
@@ -387,8 +343,6 @@ namespace Instagram
                 lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = _totalHasScan + $@"/{_totalScan}"), null);
             }
 
-            // Ở mỗi trình duyệt, loop danh sách dữ liệu được cấp phát -> lấy data -> lưu vào 1 biến toàn cục List<Response gì đó>
-
             _totalThread -= 1;
             lblThread.BeginInvoke(new Action(() => lblThread.Text = _totalThread.ToString()), null);
             driver.Close();
@@ -401,7 +355,7 @@ namespace Instagram
             driver.Navigate().GoToUrl(linkFollower);
 
             var phoneNumb = "";
-            var isLoaded = CheckExistElement(driver, ".x78zum5.x1q0g3np.xieb3on", 10);
+            var isLoaded = CheckExistElement(driver, "._aarf", 5);
 
             if (!isLoaded)
             {
@@ -430,7 +384,7 @@ namespace Instagram
 
             try
             {
-                var isLoaded = CheckExistElement(driver, ".x78zum5.x1q0g3np.xieb3on", 10);
+                var isLoaded = CheckExistElement(driver, "._aarf", 5);
 
                 if (!isLoaded)
                 {
@@ -465,7 +419,7 @@ namespace Instagram
                         break;
                     }
 
-                    Thread.Sleep(1000);
+                    Thread.Sleep(500);
                 }
 
                 phoneNumb = string.Join(",", listPhoneInPost.Distinct());
@@ -486,7 +440,7 @@ namespace Instagram
                 //Int32 unixTimestamp = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 var excelMapper = new ExcelMapper();
                 var timeDone = DateTime.Now.ToString("HH.mm_dd-MM-yyyy");
-                var fileWinPath = string.Concat(desktopPath, @"\followers_" + timeDone + ".xlsx");
+                var fileWinPath = string.Concat(desktopPath, @"\following_" + timeDone + ".xlsx");
                 var file = new ExcelHelper();
                 // Create a new workbook with a single sheet
                 file.NewFile();
@@ -509,11 +463,11 @@ namespace Instagram
 
         private void LoadCookies(IWebDriver driver, string cookiesString, string userName, string password, string cookiesPath)
         {
-            MessageBox.Show(cookiesString);
             var cookies = JsonConvert.DeserializeObject<List<CookiesModel>>(cookiesString);
+            var datetime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             if (cookies != null)
-                foreach (var cookie in from item in cookies let expiry = DateTimeOffset.FromUnixTimeSeconds(item.expiry) select new Cookie(item.name, item.value, item.domain, item.path, expiry.DateTime, item.secure, item.httpOnly, item.sameSite))
+                foreach (var cookie in from item in cookies let expiry = datetime.AddSeconds(item.expiry) select new Cookie(item.name, item.value, item.domain, item.path, expiry, item.secure, item.httpOnly, item.sameSite))
                 {
                     driver.Manage().Cookies.AddCookie(cookie);
                 }
@@ -521,8 +475,8 @@ namespace Instagram
             Thread.Sleep(1000);
             driver.Navigate().Refresh();
 
-            var isLoad = CheckExistElement(driver, ".xl5mz7h.xhuyl8g", 10);
-            var notifyExist = CheckExistElement(driver, "._a9-v", 3);
+            var isLoad = CheckExistElement(driver, ".xl5mz7h.xhuyl8g", 5);
+            var notifyExist = CheckExistElement(driver, "._a9-v", 5);
             if (isLoad || notifyExist)
             {
                 SaveCookies(driver, cookiesPath);
@@ -604,8 +558,25 @@ namespace Instagram
             timer1.Interval = 1000;
             timer1.Start();
 
+            var links = txtTargetLinks.Text.Replace(" ", "").Split("\r\n").ToList();
 
-            _targetLinks = txtTargetLinks.Text.Split("\r\n").ToList();
+            foreach (var item in links)
+            {
+                if (!item.Contains("="))
+                {
+                    MessageBox.Show("Nhập thiếu userId cho link cần tìm!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var linkModel = new TargetLinkModel();
+                var index = item.IndexOf("=", StringComparison.Ordinal);
+                var targetlink = item[..index];
+                var userId = item.Replace(targetlink, "").Replace("=", "");
+
+                linkModel.TargetLinks = targetlink;
+                linkModel.UserId = userId;
+                _targetLinks.Add(linkModel);
+            }
 
             // Create a new thread object.
             _myThread = new Thread(MyThreadProc);
@@ -622,7 +593,7 @@ namespace Instagram
             _totalScan = 0;
             _totalHasScan = 0;
             _totalThread = 0;
-            _targetLinks = new List<string>();
+            _targetLinks = new List<TargetLinkModel>();
             _followerLinks = new List<FollowerLink>();
             _excelData = new List<ExcelData>();
             _timeSpan = new TimeSpan(0, 0, 0);
@@ -737,7 +708,7 @@ namespace Instagram
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show(@"Bạn đang thoát khỏi ứng dụng!\r\nDữ liệu hiện tại sẽ không được lưu trữ, bạn có muốn tiếp tục không.", @"Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+            if (MessageBox.Show("Bạn đang thoát khỏi ứng dụng!\r\nDữ liệu hiện tại sẽ không được lưu trữ, bạn có muốn tiếp tục không.", @"Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
             {
                 e.Cancel = true;
             }
@@ -746,6 +717,27 @@ namespace Instagram
         private void Main_FormClosed(object sender, FormClosedEventArgs e)
         {
             Application.Exit();
+        }
+
+        public string GetAllUserByScript(string userId, string timeWait)
+        {
+            string result = "";
+
+            result += "options = {\r\n    userId: " + userId + ",\r\n    list: 1 \r\n};";
+            result +=
+                "let config = {\r\n  followers: {\r\n    hash: 'c76146de99bb02f6415203be841dd25a',\r\n    path: 'edge_followed_by'\r\n  },\r\n  following: {\r\n    hash: 'd04b0a864b4b54837c0d870b0e77e076',\r\n    path: 'edge_follow'\r\n  }\r\n};\r\n\r\nvar allUsers = [];\r\n\r\nfunction getUsernames(data) {\r\n    var userBatch = data.map(element => element.node.username);\r\n    allUsers.push(...userBatch);\r\n}\r\n\r\nasync function makeNextRequest(nextCurser, listConfig) {\r\n    var params = {\r\n        \"id\": options.userId,\r\n        \"include_reel\": true,\r\n        \"fetch_mutual\": true,\r\n        \"first\": 50\r\n    };\r\n    if (nextCurser) {\r\n        params.after = nextCurser;\r\n    }\r\n    var requestUrl = `https://www.instagram.com/graphql/query/?query_hash=` + listConfig.hash + `&variables=` + encodeURIComponent(JSON.stringify(params));\r\n\r\n    var xhr = new XMLHttpRequest();\r\n    xhr.onload = function(e) {\r\n        var res = JSON.parse(xhr.response);\r\n\r\n        var userData = res.data.user[listConfig.path].edges;\r\n        getUsernames(userData);\r\n\r\n        var curser = \"\";\r\n        try {\r\n            curser = res.data.user[listConfig.path].page_info.end_cursor;\r\n        } catch {\r\n\r\n        }\r\n        var users = [];\r\n        if (curser) {\r\n            makeNextRequest(curser, listConfig);\r\n        } else {\r\n            var printString =\"\"\r\n            allUsers.forEach(item => printString = printString + item + \"\\n\");    }\r\n    }\r\n\r\n    xhr.open(\"GET\", requestUrl);\r\n    xhr.send();\r\n}\r\n";
+            result += "makeNextRequest(\"\", config.following);\r\n  \r\nconst myFunction = () => {\r\n    return new Promise((resolve, reject) => {\r\n      setTimeout(() => {\r\n        resolve(allUsers);\r\n      }, " + timeWait + ");\r\n    });\r\n  };\r\n  var callback = arguments[arguments.length - 1]; \r\n  myFunction().then((value) => {\r\n     callback(value);\r\n  });";
+
+            return result;
+        }
+
+        public string GetNameInLink(string targetLinks)
+        {
+            string name = "";
+
+            name = targetLinks.Replace("https://www.instagram.com/", "").Replace("/", "");
+
+            return name;
         }
     }
 }
