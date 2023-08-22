@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using DocumentFormat.OpenXml.Bibliography;
+using OpenQA.Selenium.Firefox;
 using Org.BouncyCastle.Asn1.X509;
 using OpenQA.Selenium.Support.UI;
 
@@ -192,13 +193,15 @@ namespace Instagram
         private void GetFollower(TargetLinkModel targetLinks, string userName, string password, string cookiesPath)
         {
             //Mở trình duyệt
-            var options = new ChromeOptions();
+            //var options = new ChromeOptions();
+            var options = new FirefoxOptions();
             options.AddArgument("--headless");
 
-            var service = ChromeDriverService.CreateDefaultService();
+            //var service = ChromeDriverService.CreateDefaultService();
+            var service = FirefoxDriverService.CreateDefaultService();
             service.HideCommandPromptWindow = true;
 
-            IWebDriver driver = new ChromeDriver(service, options, TimeSpan.FromMinutes(5));
+            IWebDriver driver = new FirefoxDriver(service, options, TimeSpan.FromMinutes(5));
             _totalThread += 1;
             lblThread.BeginInvoke(new Action(() => lblThread.Text = _totalThread.ToString()), null);
             driver.Manage().Cookies.DeleteAllCookies();
@@ -246,16 +249,29 @@ namespace Instagram
             }
 
             var numbOfFollowing = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll(\"._ac2a\")[2].innerText");
-            var totalFollowing = Convert.ToInt32(numbOfFollowing.ToString().Replace(",", ""));
+            var totalFollowing = Convert.ToInt32(numbOfFollowing.ToString().Replace(",", "").Replace(".", ""));
             int timeWait = 60000;
-            if (totalFollowing >= 5000 && totalFollowing <= 10000)
+            if (totalFollowing < 2000)
+            {
+                timeWait = 20000;
+            }
+            else if (totalFollowing < 3000)
+            {
+                timeWait = 30000;
+            }
+            else if(totalFollowing <4000)
+            {
+                timeWait = 40000;
+            }
+            else if(totalFollowing >= 5000 && totalFollowing <= 10000)
             {
                 timeWait = 90000;
             }
             else if (totalFollowing > 10000)
             {
-                timeWait = 3000000;
+                timeWait = 18000000;
             }
+             
 
             var excuteSrcipt = GetAllUserByScript(targetLinks.UserId, timeWait.ToString());
 
@@ -299,13 +315,13 @@ namespace Instagram
 
         private void GetPhoneNumber(List<FollowerLink> listFollower, string userName, string password, string cookiesPath)
         {
-            var options = new ChromeOptions();
-            options.AddArguments("--headless");
-
-            var service = ChromeDriverService.CreateDefaultService();
+            var options = new FirefoxOptions();
+            options.AddArgument("--headless");
+            
+            var service = FirefoxDriverService.CreateDefaultService();
             service.HideCommandPromptWindow = true;
 
-            IWebDriver driver = new ChromeDriver(service, options);
+            IWebDriver driver = new FirefoxDriver(service, options, TimeSpan.FromMinutes(5));
             driver.Navigate().GoToUrl(@"https://www.instagram.com/");
 
             _totalThread += 1;
@@ -553,20 +569,12 @@ namespace Instagram
                 btnStart.Enabled = true;
                 return;
             }
-
-            // Create a timer and start it.
-            timer1.Interval = 1000;
-            timer1.Start();
-
+            
             var links = txtTargetLinks.Text.Replace(" ", "").Split("\r\n").ToList();
 
             foreach (var item in links)
             {
-                if (!item.Contains("="))
-                {
-                    MessageBox.Show("Nhập thiếu userId cho link cần tìm!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
+                if (string.IsNullOrEmpty(item) || !item.Contains("=")) continue;
 
                 var linkModel = new TargetLinkModel();
                 var index = item.IndexOf("=", StringComparison.Ordinal);
@@ -577,6 +585,17 @@ namespace Instagram
                 linkModel.UserId = userId;
                 _targetLinks.Add(linkModel);
             }
+
+            if (_targetLinks.Count == 0)
+            {
+                MessageBox.Show(@"Link nhập vào không hợp lệ!", @"Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnStart.Enabled = true;
+                return;
+            }
+
+            // Create a timer and start it.
+            timer1.Interval = 1000;
+            timer1.Start();
 
             // Create a new thread object.
             _myThread = new Thread(MyThreadProc);
