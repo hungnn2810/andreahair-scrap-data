@@ -33,14 +33,14 @@ namespace Instagram
 
         private List<TargetLinkModel> _targetLinks = new();
         private List<FollowerLink> _followerLinks = new();
+        private List<FollowerLink> _linkHasGot = new();
         private List<ExcelData> _excelData = new();
         private List<LoginModel> _listLogin = new();
         private TimeSpan _timeSpan = new(0, 0, 0);
         private int _totalScan;
         private int _totalHasScan;
         private int _totalThread;
-
-        private const string binaryPath = "chromedriver.exe";
+        private bool isContinue;
 
         #endregion Properties
 
@@ -48,48 +48,51 @@ namespace Instagram
         {
             try
             {
-                #region GetFollower
-
-                using (SemaphoreSlim concurrencySemaphore = new(_listLogin.Count))
+                if (!isContinue)
                 {
-                    List<Task> tasks = new();
-                    foreach (var link in _targetLinks)
+                    #region GetFollower
+
+                    using (SemaphoreSlim concurrencySemaphore = new(_listLogin.Count))
                     {
-                        try
+                        List<Task> tasks = new();
+                        foreach (var link in _targetLinks)
                         {
-                            concurrencySemaphore.Wait();
-                            foreach (var login in _listLogin.Where(login => !login.IsInUse))
+                            try
                             {
-                                login.IsInUse = true;
-
-                                var t = Task.Factory.StartNew(() =>
+                                concurrencySemaphore.Wait();
+                                foreach (var login in _listLogin.Where(login => !login.IsInUse))
                                 {
-                                    try
-                                    {
-                                        GetFollower(link, login.UserName, login.Password, login.CookiesPath);
-                                    }
-                                    finally
-                                    {
-                                        login.IsInUse = false;
-                                        concurrencySemaphore.Release();
-                                    }
-                                });
+                                    login.IsInUse = true;
 
-                                tasks.Add(t);
+                                    var t = Task.Factory.StartNew(() =>
+                                    {
+                                        try
+                                        {
+                                            GetFollower(link, login.UserName, login.Password, login.CookiesPath);
+                                        }
+                                        finally
+                                        {
+                                            login.IsInUse = false;
+                                            concurrencySemaphore.Release();
+                                        }
+                                    });
 
-                                break;
+                                    tasks.Add(t);
+
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                                // ignored
                             }
                         }
-                        catch
-                        {
-                            // ignored
-                        }
+
+                        Task.WaitAll(tasks.ToArray());
                     }
 
-                    Task.WaitAll(tasks.ToArray());
+                    #endregion GetFollower
                 }
-
-                #endregion GetFollower
 
 
                 #region GetPhoneNumber
@@ -159,6 +162,10 @@ namespace Instagram
 
                 MessageBox.Show($@"File đã xuất có tên {fileName}!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 btnStart.BeginInvoke(new Action(() => btnStart.Enabled = true), null);
+
+                if(_totalScan != _totalHasScan)
+                    btnContinue.BeginInvoke(new Action(() => btnContinue.Enabled = true), null);
+
                 timer1.Stop();
             }
             catch (Exception ex)
@@ -166,6 +173,8 @@ namespace Instagram
                 timer1.Stop();
                 MessageBox.Show(ex.Message);
                 btnStart.BeginInvoke(new Action(() => btnStart.Enabled = true), null);
+                btnContinue.BeginInvoke(new Action(() => btnContinue.Enabled = true), null);
+
             }
         }
 
@@ -225,16 +234,6 @@ namespace Instagram
             driver.Navigate().GoToUrl(targetLinks.TargetLinks);
 
             SaveCookies(driver, cookiesPath);
-            var isNeedReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 2);
-
-            if (isNeedReload)
-            {
-                ((IJavaScriptExecutor)driver).ExecuteScript("document.querySelector('.x1i10hfl.xjqpnuy.xa49m3k.xqeqjp1.x2hbi6w.x972fbf.xcfux6l.x1qhh985.xm0m39n.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x2lwn1j.xeuugli.xexx8yu.x18d9i69.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.xjyslct.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x1ejq31n.xd10rxx.x1sy0etr.x17r0tee.x9f619.x9bdzbf.x1ypdohk.x78zum5.x1i0vuye.x1f6kntn.xwhw2v2.xl56j7k.x17ydfre.x1n2onr6.x2b8uid.xlyipyv.x87ps6o.x14atkfc.x1d5wrs8.xn3w4p2.x5ib6vp.xc73u3c.x1tu34mt.xzloghq').click()");
-
-                Thread.Sleep(2000);
-
-                driver.Navigate().GoToUrl(targetLinks.TargetLinks);
-            }
 
             var isCannotReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 3);
 
@@ -245,7 +244,8 @@ namespace Instagram
                 File.Delete(cookiesPath);
                 driver.Quit();
                 driver.Dispose();
-                MessageBox.Show($@"Tài khoản: {userName} tạm thời không thể sử dụng được!", "Thông báo", MessageBoxButtons.OK);
+                MessageBox.Show($@"Tài khoản: {userName} tạm thời không thể sử dụng được!", "Thông báo", MessageBoxButtons.OK); 
+                return;
             }
 
             var numbOfFollowing = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll(\"._ac2a\")[2].innerText");
@@ -259,11 +259,11 @@ namespace Instagram
             {
                 timeWait = 30000;
             }
-            else if(totalFollowing <4000)
+            else if (totalFollowing < 4000)
             {
                 timeWait = 40000;
             }
-            else if(totalFollowing >= 5000 && totalFollowing <= 10000)
+            else if (totalFollowing >= 5000 && totalFollowing <= 10000)
             {
                 timeWait = 90000;
             }
@@ -271,7 +271,7 @@ namespace Instagram
             {
                 timeWait = 18000000;
             }
-             
+
 
             var excuteSrcipt = GetAllUserByScript(targetLinks.UserId, timeWait.ToString());
 
@@ -317,7 +317,7 @@ namespace Instagram
         {
             var options = new FirefoxOptions();
             options.AddArgument("--headless");
-            
+
             var service = FirefoxDriverService.CreateDefaultService();
             service.HideCommandPromptWindow = true;
 
@@ -339,10 +339,21 @@ namespace Instagram
             {
                 LoadCookies(driver, cookiesExisted, userName, password, cookiesPath);
             }
+            SaveCookies(driver, cookiesPath);
+
 
             foreach (var data in listFollower)
             {
                 var phoneNumb = GetPhoneNumberInBio(driver, data.followerLink);
+
+                var isNeedReload = CheckExistElement(driver, ".x6s0dn4.xrvj5dj.x1iyjqo2.x5yr21d.x1swvt13.x1pi30zi.x2b8uid", 0);
+                if (isNeedReload)
+                {
+                    //((IJavaScriptExecutor)driver).ExecuteScript("document.querySelector('.x1i10hfl.xjqpnuy.xa49m3k.xqeqjp1.x2hbi6w.x972fbf.xcfux6l.x1qhh985.xm0m39n.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x2lwn1j.xeuugli.xexx8yu.x18d9i69.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.xjyslct.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x1ejq31n.xd10rxx.x1sy0etr.x17r0tee.x9f619.x9bdzbf.x1ypdohk.x78zum5.x1i0vuye.x1f6kntn.xwhw2v2.xl56j7k.x17ydfre.x1n2onr6.x2b8uid.xlyipyv.x87ps6o.x14atkfc.x1d5wrs8.xn3w4p2.x5ib6vp.xc73u3c.x1tu34mt.xzloghq').click()");
+                    MessageBox.Show($@"Tài khoản {userName} hiện tại không thể dùng để crawl!", "Thông báo!");
+                    break;
+                }
+
                 Thread.Sleep(1000);
 
                 var excelData = new ExcelData
@@ -354,6 +365,11 @@ namespace Instagram
                 };
 
                 _excelData.Add(excelData);
+                _linkHasGot.Add(new FollowerLink()
+                {
+                    followerLink = excelData.link_ig,
+                    ownername = excelData.ownername,
+                });
 
                 _totalHasScan += 1;
                 lblHasScan.BeginInvoke(new Action(() => lblHasScan.Text = _totalHasScan + $@"/{_totalScan}"), null);
@@ -368,6 +384,7 @@ namespace Instagram
 
         private string GetPhoneNumberInBio(IWebDriver driver, string linkFollower)
         {
+            Thread.Sleep(2000);
             driver.Navigate().GoToUrl(linkFollower);
 
             var phoneNumb = "";
@@ -408,7 +425,7 @@ namespace Instagram
                 }
 
                 var listPhoneInPost = new List<string>();
-                for (var i = 0; i < 30; i++)
+                for (var i = 0; i < 10; i++)
                 {
                     ((IJavaScriptExecutor)driver).ExecuteScript($"document.querySelectorAll('._aagu')[{i}].click()");
 
@@ -430,12 +447,12 @@ namespace Instagram
                         }
                     }
 
-                    if (i >= 10 && listPhoneInPost.Count >= 1)
-                    {
-                        break;
-                    }
+                    //if (i >= 10 && listPhoneInPost.Count >= 1)
+                    //{
+                    //    break;
+                    //}
 
-                    Thread.Sleep(500);
+                    Thread.Sleep(1500);
                 }
 
                 phoneNumb = string.Join(",", listPhoneInPost.Distinct());
@@ -553,6 +570,7 @@ namespace Instagram
         private void btnCrawl_Click(object sender, EventArgs e)
         {
             btnStart.Enabled = false;
+            btnContinue.Enabled = false;
 
             RefreshDefault();
 
@@ -569,7 +587,7 @@ namespace Instagram
                 btnStart.Enabled = true;
                 return;
             }
-            
+
             var links = txtTargetLinks.Text.Replace(" ", "").Split("\r\n").ToList();
 
             foreach (var item in links)
@@ -628,10 +646,27 @@ namespace Instagram
         {
             var regexVal = val.Replace(" ", "");
 
-            var extractPhoneNumberRegex = new Regex("\\+?(\\s*\\d+)*[0-9][0-9]{7,14}");
+            var extractPhoneNumberRegex = new Regex(@"\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}");
 
             var regex = extractPhoneNumberRegex.Matches(regexVal)
                 .Select(m => m.Value).ToList();
+            
+            var removeIsNotPhoneNumber = new List<string>();
+            foreach (var item in regex)
+            {
+                if (item.Length < 9)
+                {
+                    removeIsNotPhoneNumber.Add(item);
+                }
+            }
+
+            if(removeIsNotPhoneNumber.Count > 0)
+            {
+                foreach (var item in removeIsNotPhoneNumber)
+                {
+                    regex.Remove(item);
+                }
+            }
 
             var phoneNumber = string.Join(",", regex.Distinct());
 
@@ -757,6 +792,29 @@ namespace Instagram
             name = targetLinks.Replace("https://www.instagram.com/", "").Replace("/", "");
 
             return name;
+        }
+
+        private void btnContinue_Click(object sender, EventArgs e)
+        {
+            isContinue = true;
+            btnStart.Enabled = false;
+
+            // Create a timer and start it.
+            timer1.Interval = 1000;
+            timer1.Start();
+
+            foreach (var item in _linkHasGot)
+            {
+                _followerLinks.Remove(item);
+            }
+
+            _linkHasGot = new List<FollowerLink>();
+
+            // Create a new thread object.
+            _myThread = new Thread(MyThreadProc);
+
+            // In the constructor of the thread object, specify the code that you want to run in the new thread.
+            _myThread.Start();
         }
     }
 }
