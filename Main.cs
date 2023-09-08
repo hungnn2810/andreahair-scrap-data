@@ -248,8 +248,13 @@ namespace Instagram
                 return;
             }
 
-            var numbOfFollowing = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll(\"._ac2a\")[2].innerText");
-            var totalFollowing = Convert.ToInt32(numbOfFollowing.ToString().Replace(",", "").Replace(".", ""));
+            int totalFollowing = 0;
+            if (CheckExistElement(driver, "._ac2a", 30))
+            {
+                var numbOfFollowing = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll(\"._ac2a\")[2].innerText");
+                totalFollowing = Convert.ToInt32(numbOfFollowing.ToString().Replace(",", "").Replace(".", ""));
+            }
+
             int timeWait = 60000;
             if (totalFollowing < 2000)
             {
