@@ -250,7 +250,7 @@ namespace Instagram
 
             int totalFollowing = 20;
 
-            int timeWait = 20000;
+            int timeWait = 10000;
             if (totalFollowing < 2000)
             {
                 timeWait = 20000;
@@ -281,7 +281,7 @@ namespace Instagram
             var listFollowing = following.Split(",");
 
             var ownerName = GetNameInLink(targetLinks.TargetLinks);
-            var follows = listFollowing.Take(20);
+            var follows = listFollowing.Take(10);
             foreach (var followName in follows)
             {
                 try
