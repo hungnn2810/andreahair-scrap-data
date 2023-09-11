@@ -248,14 +248,9 @@ namespace Instagram
                 return;
             }
 
-            int totalFollowing = 0;
-            if (CheckExistElement(driver, "._ac2a", 30))
-            {
-                var numbOfFollowing = ((IJavaScriptExecutor)driver).ExecuteScript("return document.querySelectorAll(\"._ac2a\")[2].innerText");
-                totalFollowing = Convert.ToInt32(numbOfFollowing.ToString().Replace(",", "").Replace(".", ""));
-            }
+            int totalFollowing = 20;
 
-            int timeWait = 60000;
+            int timeWait = 20000;
             if (totalFollowing < 2000)
             {
                 timeWait = 20000;
@@ -286,8 +281,8 @@ namespace Instagram
             var listFollowing = following.Split(",");
 
             var ownerName = GetNameInLink(targetLinks.TargetLinks);
-
-            foreach (var followName in listFollowing)
+            var follows = listFollowing.Take(20);
+            foreach (var followName in follows)
             {
                 try
                 {
