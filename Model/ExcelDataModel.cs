@@ -12,6 +12,7 @@ namespace Instagram.Model
         public string username { get; set; }
         public string phone_number { get; set; }
         public string link_ig { get; set; }
+        public string link_lienket { get; set; }
     }
 
     public class FollowerLink

@@ -359,6 +359,14 @@ namespace Instagram
                     break;
                 }
 
+                var checkLinkDirection = CheckExistElement(driver, "._aa_y._aa_z._aa_- .x3nfvp2 a", 1);
+                var linkLienKet = "";
+                if (checkLinkDirection)
+                {
+                    var href = ((IJavaScriptExecutor)driver).ExecuteScript($"return document.querySelector('._aa_y._aa_z._aa_- .x3nfvp2 a').href");
+                    linkLienKet = href.ToString();
+                }
+
                 Thread.Sleep(1000);
 
                 var excelData = new ExcelData
@@ -366,7 +374,8 @@ namespace Instagram
                     ownername = data.ownername.Replace("https://www.instagram.com/", "").Replace("/", ""),
                     username = data.followerLink.Replace("https://www.instagram.com/", "").Replace("/", ""),
                     phone_number = phoneNumb,
-                    link_ig = data.followerLink
+                    link_ig = data.followerLink,
+                    link_lienket = linkLienKet ?? ""
                 };
 
                 _excelData.Add(excelData);
